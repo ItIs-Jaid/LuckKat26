@@ -1,112 +1,124 @@
 # agentic DevSecLocHostOps
 
-*A local-first way to let your AI agent team live inside your IDE — without giving up control, privacy, or your offline workflow.*
+*Local-first AI agent stack + a self-contained local dashboard. This repository is a WORK IN PROGRESS.*
+
+> **Status: incomplete / work-in-progress.** The code here is real and runs locally, but it is
+> not a finished product. Pieces are at different maturity levels (see "Maturity" notes per
+> section). Expect rough edges, missing docs, and interfaces that will change. Nothing here
+> requires the internet to run.
 
 ---
 
-## What this is
+## What this repo contains
 
-This folder is the documentation hub for a setup I call **agentic DevSecLocHostOps** — a personal, on-device stack where a reasoning agent (Hermes) and its subagent team plug directly into my JetBrains IDEs over standard protocols, so the agent can read my code, run builds, and drive the editor the same way I would — but I stay in the driver's seat.
+Two related but independent parts live in this tree:
 
-The "DevSecLocHostOps" name is a mouthful on purpose. It's a checklist, not a buzzword:
-
-- **Dev** — real development work, in PyCharm and CLion
-- **Sec** — secrets and logic stay local; nothing is forced into a cloud
-- **Loc** — *local-first*: the whole thing runs on my machine
-- **Host** — my Windows box, plus Docker for containerized local services
-- **Ops** — DataGrip for data, Docker for infra, agents for the repetitive parts
-
-The deeper point: most "AI coding" tools are someone else's server, deciding what your agent can see and do. This stack flips that. The agent runs here, the IDE runs here, and the connection between them is an open protocol (MCP / ACP) I can inspect, limit, and unplug.
+1. **The agentic DevSecLocHostOps stack** — documentation for a local-first setup where a
+   reasoning agent (Hermes) and its subagent team drive JetBrains IDEs over open protocols
+   (MCP / ACP). See `docs/integration-map.md`, `docs/device-inventory.md`, `docs/tool-reference.md`.
+2. **The Local Dashboard app** (the part that is actually built and runnable) — a FastAPI +
+   SQLite dashboard that browses a local knowledge base and tracks anonymous localhost
+   interaction metrics. This is the focus of the three layers below.
 
 ---
 
-## The layers
+## The Local Dashboard — three layers
 
+The dashboard is deliberately split into three layers so each can be understood, tested, and
+evolved on its own. They connect as: **the JS GUI asks → the Python middle reads the SQL stores
+and answers → the GUI renders the result.**
+
+### 1. SQL backend (the data)
+
+Two SQLite databases, kept separate on purpose:
+
+- **`kb/kb.db` — read-only knowledge base.** The source of truth the dashboard browses.
+  ~12 tables (languages, libraries, patterns, tutorials, sources, vulnerabilities,
+  security_tools, methodologies, code_reviews, errors, research_runs, review_queue). The server
+  opens it in `mode=ro` so it can never be written to or locked, even over a network share.
+- **`dashboard/metrics.db` — writable interaction store.** A dedicated DB holding only an opaque
+  visitor id and anonymous event counters (`visitors` + `events` tables). Created automatically
+  on first run. Holds **no PII** (no IP, no user-agent, no content).
+
+Why two stores: the KB is a curated reference; mixing live analytics writes into it would
+pollute and risk it. Separation keeps the read path safe and the write path isolated.
+
+Schema (`metrics.db`):
+
+```sql
+CREATE TABLE visitors ( id TEXT PRIMARY KEY, created_at TEXT NOT NULL );
+CREATE TABLE events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    visitor_id TEXT NOT NULL, event TEXT NOT NULL,
+    table_name TEXT, meta TEXT, ts TEXT NOT NULL
+);
 ```
-YOU  ── directs ──▶  Hermes Agent (orchestrator)
-                         │  delegates
-                         ├──▶ Hermes subagent fan-out (research / solutions / vetting)
-                         │
-                         ├──▶ JetBrains IDEs (PyCharm · CLion · DataGrip)   [MCP + ACP]
-                         │
-                         └──▶ Gemini Spark  ── manual companion, not wired
 
-Docker Desktop  ── local containers for DBs, build runners, agent sidecars
+### 2. Python middle (the server)
+
+`dashboard/server.py` (FastAPI) is the only writer/reader between the GUI and the SQL.
+
+- **KB read endpoints (read-only):** `GET /api/tables`, `GET /api/summary`,
+  `GET /api/rows` (server-side keyset pagination — the table never loads fully into memory),
+  `GET /api/row/{table}/{id}`.
+- **Metrics endpoints (writable, gated):** `POST /api/metrics` logs an interaction event;
+  `GET /api/metrics/summary` aggregates visits / unique visitors / events / active sessions /
+  top tables. `GET /` issues a signed `METRICS_VISITOR` cookie when absent.
+- **Security posture:** the visitor cookie is HMAC-SHA256 signed and validated with a
+  constant-time compare (tampered/missing → `401`); all SQL is parameterized; the server binds
+  `127.0.0.1` only (never `0.0.0.0`); `kb/kb.db` is opened read-only. The secret comes from the
+  `METRICS_SECRET` env var (dev fallback + warning if unset).
+- `dashboard/metrics.py` owns the metrics store; `dashboard/db.py` owns the read-only KB access
+  (severity normalization, keyset cursors, source-id joins).
+
+### 3. JS GUI (the frontend)
+
+`dashboard/static/index.html` is a **single self-contained file** — all CSS/JS inline, zero
+CDN/outbound requests. Two surfaces:
+
+- **Interaction Metrics panel** (the home view): four stat tiles (visits, unique visitors,
+  events, active sessions) plus "by event" and "top tables" breakdowns, fed by
+  `GET /api/metrics/summary`. Styled as a dark, rounded, green/blue-accent panel.
+- **KB browser** (reachable via three category buttons under the metrics panel — *Browse
+  Tables*, *Search*, *Inspect Row*): a virtualized windowed table that renders only the visible
+  rows (handles large tables without DOM bloat), sortable headers, a search box, and a row
+  detail drawer. Navigation is menu → content → back (no persistent sidebar).
+
+Client-side tracking is best-effort and never blocks the UI: a `track()` function POSTs events
+only when the signed cookie is present, and swallows all errors. All dynamic text is set via
+`textContent` / an `esc()` helper — no untrusted data reaches `innerHTML`.
+
+---
+
+## Run it
+
+```bash
+cd dashboard
+./run.sh          # or: .\run.ps1  (creates a .venv via uv, serves http://127.0.0.1:8000)
 ```
 
-Four moving parts, all on-host:
+Open http://127.0.0.1:8000. Point at a different KB with `KB_DB_PATH`; the metrics store with
+`METRICS_DB_PATH`; set `METRICS_SECRET` for real traffic.
 
-1. **Hermes Agent** — the orchestrator. It has skills, memory, and can spin up subagents. It speaks both MCP and ACP.
-2. **The JetBrains suite** — PyCharm (Python), CLion (C/C++), DataGrip (databases). All 2026.2.x, all recent enough to natively support agent protocols.
-3. **Docker Desktop** — local, reproducible infra. No cloud account required to run a database or a build container.
-4. **Gemini Spark** — my *human-driven* research sidekick in the Gemini app. Deliberately **not** wired in, so the local-first boundary holds.
+Tests (synthetic fixture DB, no real data needed):
 
----
-
-## How the connection actually works
-
-Two open protocols do the heavy lifting. Both are documented in `docs/integration-map.md` with exact settings paths and commands — this is the human version.
-
-**MCP (Model Context Protocol) = agent ↔ tools.**
-Think of it as USB-C for AI tools. The IDE can *expose* its internals as an MCP server (so Hermes can open files, run the terminal, read error inspections). Hermes can *consume* that server, or *expose* its own. One connection pattern, reused everywhere.
-
-**ACP (Agent Client Protocol) = editor ↔ agent.**
-This is how the IDE *hosts* an agent. Hermes runs in ACP mode (`hermes acp`) and shows up in the IDE's agent picker next to JetBrains' own Junie. The IDE owns the chat window; Hermes keeps its own memory, skills, and identity.
-
-The mental model: **MCP is what the agent uses; ACP is where the agent sits.**
+```bash
+cd dashboard && uv run --no-project pytest -q
+```
 
 ---
 
-## Use cases
+## Maturity / what is incomplete
 
-These are things this stack makes *natural* — not hypothetical, but the actual shape of work it enables.
-
-### 1. "Open the file with the auth bug and fix it"
-Hermes connects to the IDE's MCP server, reads `get_file_problems` (the full IntelliJ inspection engine), opens the offending file, and edits it through the same refactoring tools I'd use. I review the diff. Nothing leaves the machine.
-
-### 2. "Run the test suite and tell me what broke"
-The agent calls `execute_run_configuration` / `execute_terminal_command` in the IDE, captures output, and summarizes failures — or dispatches a *subagent* to diagnose while the main agent keeps context. Parallel reasoning, one laptop.
-
-### 3. "Refactor this C++ module against the Python caller"
-Because CLion and PyCharm are both wired, the agent can cross-reference native and scripting layers in one session — `analyze_calls` on one side, symbol lookup on the other. Hard to do by hand across two IDEs; trivial when both are MCP surfaces.
-
-### 4. "Query the staging database and patch the migration"
-DataGrip's 2026.1 release added DB tools to its MCP surface (`execute_sql_query`, `list_database_schemas`, …). The agent can read schema, run a query, and propose a migration — all local against a Dockerized DB.
-
-### 5. "Stand up a local service and point the agent at it"
-Docker gives me a Postgres or a build runner in one command. The agent connects to it over MCP. Reproducible environment, zero cloud dependency, easy to tear down.
-
-### 6. "Research spike, then implement"
-I can fan a research question out to several Hermes subagents (each its own context), get back vetted findings, then hand the synthesis to the IDE-connected agent to implement. That's the "agentic" part — a small team, not a single chatbot.
-
-### 7. "Keep Spark for the human questions"
-When I want a different model's take — drafting, open-ended research — I use Gemini Spark in the Gemini app, manually. It's a companion, not a cog. The boundary is intentional: the automated, code-touching work stays local and inspectable.
-
----
-
-## Possibilities this unlocks
-
-- **A portable, inspectable agent setup.** Because everything rides on MCP/ACP (open standards), I'm not locked to one vendor. Swap the IDE, swap the agent — the wiring pattern survives.
-- **Local-first by default, cloud by choice.** Nothing here *requires* the internet. If I later add a cloud agent, it's an explicit, documented layer — not a hidden dependency.
-- **Auditable automation.** MCP servers expose a known set of tools. I can see exactly what the agent can do, filter it per server, and pull the plug.
-- **Interview-ready story.** This isn't "I use AI." It's "I architected a local-first agentic dev environment using open agent protocols" — which is a different, stronger sentence. See `docs/tool-reference.md` for the resume phrasing.
-
----
-
-## What's wired vs. what's documented
-
-Honest status, because this matters:
-
-- ✅ **Verified:** the tools are installed (PyCharm/CLion/DataGrip 2026.2.x, Docker Desktop); the protocols are supported by those versions; the exact commands and settings paths are confirmed against official docs.
-- 🟡 **Documented, not yet executed:** the actual IDE↔agent connection (registering `hermes acp` in the JetBrains agent picker, adding the IDE's MCP server to Hermes' config). The steps are written down; they just haven't been run live yet.
-- ⚠️ **One manual check:** confirm PyCharm is the Pro edition (Community lacks the IDE-as-MCP-server plugin) via `Help ▸ About`, and run `hermes acp --check` to confirm the ACP extra is installed.
-
----
-
-## Where to look next
-
-- `docs/device-inventory.md` — what's actually installed, with paths
-- `docs/integration-map.md` — the precise how-to (settings paths, commands, config)
-- `docs/tool-reference.md` — the resume / interview version, with a one-liner bullet
+- **Dashboard app (this repo's runnable part):** functional end-to-end; 28 tests green. The
+  metrics schema and GUI are basic but real.
+- **KB content:** the live `kb/kb.db` is local-only and not committed; the app expects it to
+  exist on your machine (or set `KB_DB_PATH`).
+- **Agentic stack docs (`docs/`):** documented, partially verified (IDE/agent connection not
+  yet executed live). Treat as design reference, not a runbook.
+- **Deployment artifacts (`k8s/`, `deploy/`, `docker-compose*.yml`):** present as scaffolding
+  for a future k3s/NAS deployment of the *foreign* "localhostops" pipeline — **out of scope for
+  this dashboard** and excluded from what is documented as production-ready here.
+- **No CI, no release, no cloud.** Local-first by design.
 
 *Local-first. Open protocols. You hold the keys.*

@@ -1,0 +1,30 @@
+[project]
+name = "localhostops-pipeline"
+version = "0.2.0"
+description = "Local-first closed-loop device data pipeline (SQLite landing + optional Postgres warehouse)."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "sqlalchemy>=2.0",
+    "fastapi>=0.140",
+    "uvicorn>=0.30",
+    "psycopg2-binary>=2.9",
+    "python-dotenv>=1.0",
+    "httpx>=0.28",
+]
+
+[project.optional-dependencies]
+# Real adapters that need extra libs (none yet required for v1.5 core).
+bluetooth = []
+feit_lifx = ["lifxlan"]
+feit_tuya = ["tinytuya"]
+# hue adapter is deferred (openhue-api not yet on PyPI); placeholder kept so the
+# optional extra resolves. Re-add a real dep here when the Hue adapter lands.
+hue = []
+
+[tool.uv]
+package = false
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"

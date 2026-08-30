@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DevSecLocHostOps · KB Dashboard</title>
+<style>
+  :root{
+    --bg:#060807;            /* near-black, cool phosphor */
+    --panel:#0b0e0d;         /* phosphor-tinted panel */
+    --panel2:#0e1311;
+    --line:#1d2a22;          /* green-tinted hairline */
+    --ink:#bfe9c8;           /* phosphor near-white (body text) */
+    --muted:#54786a;         /* muted phosphor */
+    --accent:#39ff14;        /* RUNNER phosphor green (primary) */
+    --accent2:#ff3df0;       /* cyberpunk magenta (secondary/alert) */
+    --warn:#ff8a00;
+    --crit:#ff2b5e;
+    --high:#ff8a00;
+    --med:#2fd6ff;           /* cyan for MED severity */
+    --low:#39ff14;           /* phosphor green for LOW */
+    --row-h:28px;
+    --grid-cols: 90px 1fr 1fr 1fr;
+    --scan:rgba(57,255,20,.045);  /* scanline tint */
+    font-synthesis:none;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font:13px/1.4 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    display:flex; flex-direction:column; height:100vh; overflow:hidden;
+  }
+  header.top{
+    display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+    padding:8px 12px; background:var(--panel); border-bottom:1px solid var(--line);
+  }
+  header.top h1{font-size:14px; margin:0; letter-spacing:.3px; white-space:nowrap}
+  header.top .tag{color:var(--muted); font-size:11px}
+  .status{margin-left:auto; display:flex; gap:14px; align-items:center; flex-wrap:wrap; font-size:11px; color:var(--muted)}
+  .status b{color:var(--ink); font-weight:600}
+  .health-ok{color:var(--low)} .health-err{color:var(--crit)}
+  .loading{color:var(--accent); display:none}
+  .loading.on{display:inline}
+
+  .controls{display:flex; gap:10px; align-items:center; flex-wrap:wrap; padding:8px 12px; background:var(--panel2); border-bottom:1px solid var(--line)}
+  .controls select, .controls input, .controls button{
+    background:#0b0f14; color:var(--ink); border:1px solid var(--line); border-radius:6px;
+    padding:6px 9px; font-size:12px; outline:none;
+  }
+  .controls input[type=search]{min-width:240px}
+  .controls select:focus, .controls input:focus{border-color:var(--accent)}
+  .controls button{cursor:pointer}
+  .controls button:hover{border-color:var(--accent)}
+
+  .cards{display:flex; gap:8px; padding:8px 12px; overflow-x:auto; background:var(--panel); border-bottom:1px solid var(--line)}
+  .card{
+    flex:0 0 auto; min-width:120px; background:var(--panel2); border:1px solid var(--line);
+    border-radius:8px; padding:7px 10px; cursor:pointer; user-select:none; transition:border-color .12s, transform .05s;
+  }
+  .card:hover{border-color:var(--accent)}
+  .card.active{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent) inset}
+  .card .name{font-weight:600; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:160px}
+  .card .tot{color:var(--muted); font-size:11px; margin-top:2px}
+  .card.special{background:#10171f; border-color:#243044}
+  .bar-row{display:flex; align-items:center; gap:6px; font-size:10px; margin-top:3px; white-space:nowrap}
+  .bar-row .lab{width:54px; color:var(--muted); overflow:hidden; text-overflow:ellipsis}
+  .bar-track{flex:1; height:6px; background:#0b0f14; border-radius:3px; overflow:hidden; min-width:40px}
+  .bar-fill{height:100%}
+  .card .special-title{font-size:10px; color:var(--accent); text-transform:uppercase; letter-spacing:.6px}
+
+  .tableWrap{flex:1; display:flex; flex-direction:column; min-height:0; --grid-cols:var(--grid-cols)}
+  .head{
+    display:grid; grid-template-columns:var(--grid-cols);
+    background:var(--panel); border-bottom:1px solid var(--line); position:sticky; top:0; z-index:2;
+  }
+  .head .th{
+    padding:7px 10px; font-weight:600; font-size:11px; color:var(--muted); cursor:pointer;
+    border-right:1px solid var(--line); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    display:flex; align-items:center; gap:5px; user-select:none;
+  }
+  .head .th:hover{color:var(--ink)}
+  .head .th .arrow{color:var(--accent); font-size:10px}
+  .head .th .ctype{color:#5b6675; font-weight:400; font-size:9px}
+
+  .scroll{position:relative; flex:1; overflow:auto; min-height:0; background:var(--bg)}
+  .spacer{position:relative; width:100%}
+  .rowsLayer{position:absolute; top:0; left:0; right:0}
+  .row{
+    position:absolute; left:0; right:0; height:var(--row-h);
+    display:grid; grid-template-columns:var(--grid-cols);
+    border-bottom:1px solid #1a2029; cursor:pointer;
+  }
+  .row:hover{background:#131a24}
+  .row.selected{background:#16263a; box-shadow:0 0 0 1px var(--accent) inset}
+  .row .cell{
+    padding:0 10px; display:flex; align-items:center; overflow:hidden; text-overflow:ellipsis;
+    white-space:nowrap; border-right:1px solid #1a2029; color:var(--ink);
+  }
+  .row .cell.null{color:#4a5462; font-style:italic}
+  .empty-state{padding:30px 16px; color:var(--muted); text-align:center}
+
+  /* Drawer */
+  .drawer{
+    position:fixed; top:0; right:0; height:100vh; width:min(440px,90vw);
+    background:var(--panel); border-left:1px solid var(--line); transform:translateX(100%);
+    transition:transform .18s ease; z-index:20; display:flex; flex-direction:column;
+  }
+  .drawer.open{transform:translateX(0)}
+  .drawer header{display:flex; align-items:center; gap:8px; padding:10px 12px; border-bottom:1px solid var(--line)}
+  .drawer header h2{font-size:13px; margin:0; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .drawer .close{cursor:pointer; border:1px solid var(--line); background:#0b0f14; color:var(--ink); border-radius:6px; padding:3px 8px}
+  .drawer .body{padding:12px; overflow:auto; flex:1}
+  .drawer pre{background:#0b0f14; border:1px solid var(--line); border-radius:8px; padding:10px; overflow:auto; font-size:11px; white-space:pre-wrap; word-break:break-word}
+  .drawer h3{font-size:11px; text-transform:uppercase; letter-spacing:.6px; color:var(--accent); margin:14px 0 6px}
+  .src{display:block; padding:6px 8px; border:1px solid var(--line); border-radius:6px; margin-bottom:6px; font-size:11px; word-break:break-all}
+  .src .t{color:var(--ink)} .src .u{color:var(--accent); font-size:10px}
+  .kv{color:var(--muted)}
+  a{color:var(--accent)}
+  .scroll::-webkit-scrollbar{width:12px; height:12px}
+  .scroll::-webkit-scrollbar-thumb{background:#2a313c; border-radius:6px}
+  .cards::-webkit-scrollbar{height:8px}
+  .cards::-webkit-scrollbar-thumb{background:#2a313c; border-radius:4px}
+
+  /* ===== Marathon-2026 minimalist terminal UI (flat, low-fi, high-tech) ===== */
+  body{
+    font:12px/1.45 ui-monospace,"Cascadia Code","JetBrains Mono","SF Mono",Consolas,"Liberation Mono",monospace;
+    letter-spacing:.3px;
+    background:
+      linear-gradient(rgba(57,255,20,.018) 1px, transparent 1px) 0 0/100% 3px,
+      var(--bg);
+  }
+  /* faint STATIC scanline (no flicker — flat, not 3D) */
+  body::after{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:30;
+    background:repeating-linear-gradient(0deg, rgba(57,255,20,.03) 0 1px, transparent 1px 3px);
+    opacity:.5;
+  }
+  *::selection{ background:var(--accent); color:#04130a; }
+  header.top h1{ color:var(--accent); letter-spacing:2px; text-transform:uppercase; }
+  header.top .tag{ color:var(--muted); }
+  .controls select,.controls input,.controls button{ background:#050807; border:1px solid var(--line); color:var(--ink); border-radius:0; }
+  .controls input[type=search]{ min-width:240px; }
+  .controls select:focus,.controls input:focus{ border-color:var(--accent); }
+  .controls button:hover{ border-color:var(--accent); color:var(--accent); }
+  /* flat rectangular boxes for text */
+  .card{ border:1px solid var(--line); background:var(--panel2); }
+  .card:hover{ border-color:var(--accent); }
+  .card.active{ border-color:var(--accent); border-left:3px solid var(--accent); }
+  .card.special{ background:#080d0a; }
+  .card .special-title{ color:var(--accent); }
+  .head .th:hover{ color:var(--accent); }
+  .row:hover{ background:#0c1410; }
+  .row.selected{ background:#0c1a12; box-shadow:inset 0 0 0 1px var(--accent); }
+  .drawer{ border-left:1px solid var(--accent2); }
+  .drawer h3{ color:var(--accent); }
+
+  /* layout: left circular-nav rail + content column */
+  .bodyrow{ display:flex; flex:1; min-height:0; }
+  .content{ flex:1; min-width:0; min-height:0; display:flex; flex-direction:column; }
+  .navrail{ flex:0 0 56px; width:56px; border-right:1px solid var(--line); background:var(--panel);
+    display:flex; flex-direction:column; align-items:center; gap:10px; padding:10px 0; overflow-y:auto; }
+  .navcircle{ width:38px; height:38px; border-radius:50%; border:1px solid var(--line);
+    background:#050807; color:var(--muted); font:10px/1 ui-monospace,Consolas,monospace;
+    display:flex; align-items:center; justify-content:center; cursor:pointer; user-select:none;
+    text-transform:uppercase; }
+  .navcircle:hover{ border-color:var(--accent); color:var(--accent); }
+  .navcircle.active{ background:var(--accent); color:#04130a; border-color:var(--accent); }
+  .navcircle.reset{ border-color:var(--accent2); color:var(--accent2); }
+  .navcircle.reset:hover{ background:var(--accent2); color:#0b0110; }
+  .scroll::-webkit-scrollbar-thumb{ background:#1d3a28; }
+  .cards::-webkit-scrollbar-thumb{ background:#1d3a28; }
+  a{ color:var(--accent); }
+
+  /* ===== Interaction metrics panel — Spotify-style dark UI (aesthetic only) =====
+     Deep charcoal/black surfaces, rounded corners everywhere, green+blue accents.
+     Label stays "metrics"; function (IDs / track() / paintMetrics) unchanged. */
+  .metrics{ display:flex; flex-direction:column; gap:10px; padding:14px 16px;
+    background:#0a0a0c; border-bottom:1px solid #181818; }
+  .metrics-title{ font-size:13px; color:#1ed760; text-transform:uppercase;
+    letter-spacing:1.4px; font-weight:700; }
+  /* stat tiles — "now playing" cards: charcoal fill, rounded, green glow on hover */
+  #metricsStats{ display:flex; gap:10px; flex-wrap:wrap; overflow:visible; }
+  #metricsStats .card{ flex:1 1 130px; min-width:120px; background:#181818; border:1px solid #282828;
+    border-radius:10px; padding:10px 12px; cursor:default; }
+  #metricsStats .card:hover{ border-color:#1ed760; box-shadow:0 0 0 1px #1ed760 inset; }
+  #metricsStats .card.active{ border-color:#1ed760; box-shadow:0 0 0 1px #1ed760 inset; }
+  #metricsStats .special-title{ font-size:10px; color:#b3b3b3; text-transform:uppercase; letter-spacing:.6px; }
+  #metricsStats .tot{ color:#fff; font-size:20px; font-weight:700; margin-top:2px; }
+  .metrics-cols{ display:flex; gap:14px; flex-wrap:wrap; }
+  .metrics-block{ flex:1; min-width:220px; background:#121212; border:1px solid #181818;
+    border-radius:10px; padding:10px 12px; }
+  .metrics-block .special-title{ color:#b3b3b3; font-size:11px; text-transform:uppercase;
+    letter-spacing:.6px; margin-bottom:6px; }
+  /* bars reuse .bar-row but tinted green/blue to match the accent pairing */
+  .metrics-block .bar-row .lab{ color:#b3b3b3; }
+  .metrics-block .bar-fill{ background:#1ed760 !important; }
+  .metrics-empty{ color:#6a6a6a; font-size:11px; }
+  /* "by event" uses green, "top tables" uses blue (#2d7bf0) for visual contrast */
+  #metricsTopTables .bar-fill{ background:#2d7bf0 !important; }
+
+  /* ===== Menu-driven layout: home (metrics) <-> kb sub-views, no sidebar ===== */
+  html,body{height:100%}
+  body{ display:block; height:auto; min-height:100vh; overflow-y:auto; }
+  .home{ max-width:1100px; margin:0 auto; padding:24px 20px 48px; }
+  .catbar{ display:flex; gap:12px; flex-wrap:wrap; margin-top:14px; }
+  .cat{ background:#181818; color:#fff; border:1px solid #282828; border-radius:24px;
+    padding:10px 20px; font-size:13px; font-weight:600; cursor:pointer; letter-spacing:.3px; }
+  .cat:hover{ border-color:#1ed760; color:#1ed760; }
+  .cat:active{ box-shadow:0 0 0 1px #1ed760 inset; }
+  .kbview{ max-width:1100px; margin:0 auto; padding:16px 20px 48px; }
+  .kbview[hidden]{ display:none; }
+  .kbhead{ display:flex; align-items:center; gap:14px; margin-bottom:12px; }
+  .back{ background:#181818; color:#b3b3b3; border:1px solid #282828; border-radius:20px;
+    padding:6px 14px; font-size:12px; cursor:pointer; }
+  .back:hover{ color:#1ed760; border-color:#1ed760; }
+  .kbttl{ color:#fff; font-size:16px; font-weight:700; letter-spacing:.3px; }
+  .hint{ color:#8a8a8a; font-size:12px; margin:6px 2px 12px; }
+  /* controls/search row sits under the title in kb view */
+  .kbview .controls{ margin:6px 0 10px; }
+  .home .metrics{ background:transparent; border-bottom:none; padding:0; }
+</style>
+</head>
+<body>
+  <!-- HOME VIEW: interaction metrics + 3 category buttons (no top bar, no sidebar) -->
+  <main id="homeView" class="home">
+    <section class="metrics" id="metrics" aria-label="interaction metrics">
+      <div class="metrics-title">INTERACTION METRICS</div>
+      <div class="cards" id="metricsStats"><div class="empty-state">loading metrics…</div></div>
+      <div class="metrics-cols">
+        <div class="metrics-block">
+          <div class="special-title">by event</div>
+          <div id="metricsByEvent"><div class="metrics-empty">no data yet</div></div>
+        </div>
+        <div class="metrics-block">
+          <div class="special-title">top tables</div>
+          <div id="metricsTopTables"><div class="metrics-empty">no data yet</div></div>
+        </div>
+      </div>
+    </section>
+
+    <nav class="catbar" id="catbar" aria-label="browse categories">
+      <button class="cat" data-cat="tables">Browse Tables</button>
+      <button class="cat" data-cat="search">Search</button>
+      <button class="cat" data-cat="row">Inspect Row</button>
+    </nav>
+  </main>
+
+  <!-- KB VIEW: shown on demand when a category is chosen; Back returns home -->
+  <section id="kbView" class="kbview" hidden>
+    <div class="kbhead">
+      <button id="backBtn" class="back">← back to metrics</button>
+      <span id="kbTitle" class="kbttl">Browse Tables</span>
+    </div>
+    <div class="controls">
+      <label>table
+        <select id="tableSelect" aria-label="table picker"></select>
+      </label>
+      <input id="search" type="search" placeholder="search this table (q=)…" aria-label="search">
+      <button id="resetBtn" title="clear search & sort">reset</button>
+    </div>
+    <div class="hint" id="kbHint"></div>
+    <div class="cards" id="cards"><div class="empty-state">loading summary…</div></div>
+    <div class="tableWrap" id="tableWrap">
+      <div class="head" id="head"></div>
+      <div class="scroll" id="scroll">
+        <div class="spacer" id="spacer"></div>
+        <div class="rowsLayer" id="rowsLayer"></div>
+      </div>
+    </div>
+  </section>
+
+  <aside class="drawer" id="drawer">
+    <header>
+      <h2 id="drawer-title">row detail</h2>
+      <button class="close" id="drawer-close">close</button>
+    </header>
+    <div class="body" id="drawer-body"></div>
+  </aside>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---- constants ----
+  var ROW_H = 28;            // fixed row height (px) — must match --row-h
+  var OVERSCAN = 10;         // extra rows rendered above/below viewport
+  var LIMIT = 50;            // keyset page size
+  var MAX_SPACER = 30000000; // browser element-height safety cap
+
+  // ---- DOM ----
+  function el(id){ return document.getElementById(id); }
+  var dom = {
+    homeView: el('homeView'),
+    kbView: el('kbView'),
+    backBtn: el('backBtn'),
+    kbTitle: el('kbTitle'),
+    kbHint: el('kbHint'),
+    catbar: el('catbar'),
+    tableSelect: el('tableSelect'),
+    search: el('search'),
+    resetBtn: el('resetBtn'),
+    cards: el('cards'),
+    head: el('head'),
+    scroll: el('scroll'),
+    spacer: el('spacer'),
+    rowsLayer: el('rowsLayer'),
+    tableWrap: el('tableWrap'),
+    drawer: el('drawer'),
+    drawerTitle: el('drawer-title'),
+    drawerBody: el('drawer-body'),
+    drawerClose: el('drawer-close'),
+    metricsStats: el('metricsStats'),
+    metricsByEvent: el('metricsByEvent'),
+    metricsTopTables: el('metricsTopTables')
+  };
+
+  // ---- state ----
+  var state = {
+    tables: [],            // [{name,rows,columns:[{name,type,nullable}],searchable}]
+    tableMap: {},          // name -> table entry
+    summary: null,         // /api/summary payload
+    currentTable: null,
+    columns: [],           // column defs for current table
+    sort: 'id',
+    dir: 'desc',
+    q: '',
+    rows: [],              // in-memory loaded buffer (keyset prefix)
+    nextCursor: null,      // next_cursor from API (null = exhausted)
+    expectedTotal: 0,      // best-known total from API
+    fetching: false,
+    selectedId: null,
+    health: null
+  };
+
+  // ---- fetch helper (relative URLs only, no protocol) ----
+  function api(path){
+    return fetch(path, {headers:{'Accept':'application/json'}}).then(function(r){
+      if(!r.ok) throw new Error('HTTP '+r.status+' for '+path);
+      return r.json();
+    });
+  }
+
+  function setLoading(on){ dom.loading.classList.toggle('on', !!on); }
+
+  function fmt(n){
+    if(typeof n !== 'number' || !isFinite(n)) return String(n);
+    return n.toLocaleString('en-US');
+  }
+
+  // ---- value formatting for cells ----
+  function formatCell(v){
+    if(v === null || v === undefined) return {text:'—', isNull:true};
+    var s;
+    if(typeof v === 'object'){
+      try { s = JSON.stringify(v); } catch(e){ s = '[obj]'; }
+      if(s.length > 140) s = s.slice(0,137) + '…';
+      return {text:s, isNull:false};
+    }
+    s = String(v);
+    if(s.length > 240) s = s.slice(0,237) + '…';
+    return {text:s, isNull:false};
+  }
+
+  // ---- grid column template ----
+  function buildGridTemplate(cols){
+    if(!cols.length) return '1fr';
+    var t = '90px'; // first column (id) fixed
+    for(var i=1;i<cols.length;i++) t += ' minmax(140px,1fr)';
+    return t;
+  }
+  function applyGridTemplate(){
+    var t = buildGridTemplate(state.columns);
+    dom.tableWrap.style.setProperty('--grid-cols', t);
+  }
+
+  // ---- summary + cards ----
+  function renderCards(){
+    var c = dom.cards;
+    c.innerHTML = '';
+    if(!state.summary){
+      c.innerHTML = '<div class="empty-state">summary unavailable</div>';
+      return;
+    }
+    var tables = (state.summary.tables || []);
+    tables.forEach(function(t){
+      var card = document.createElement('div');
+      card.className = 'card' + (t.name === state.currentTable ? ' active' : '');
+      card.innerHTML = '<div class="name"></div><div class="tot">rows: '+
+        fmt(t.total) + '</div>';
+      card.querySelector('.name').textContent = t.name;
+      card.addEventListener('click', function(){ selectTable(t.name); });
+      c.appendChild(card);
+    });
+
+    // Vuln severity special card
+    var sev = state.summary.vuln_severity || {};
+    var sevCard = document.createElement('div');
+    sevCard.className = 'card special';
+    var sevHtml = '<div class="special-title">vuln severity</div>';
+    var order = ['CRITICAL','HIGH','MEDIUM','LOW','VECTOR','UNKNOWN'];
+    var maxSev = 1;
+    Object.keys(sev).forEach(function(k){ if(sev[k] > maxSev) maxSev = sev[k]; });
+    order.forEach(function(k){
+      if(!(k in sev)) return;
+      var pct = Math.round(100 * sev[k] / maxSev);
+      var color = k==='CRITICAL'?'var(--crit)':k==='HIGH'?'var(--high)':k==='MEDIUM'?'var(--med)':k==='LOW'?'var(--low)':'#7b8794';
+      sevHtml += '<div class="bar-row"><span class="lab">'+esc(k)+'</span>'+
+        '<span class="bar-track"><span class="bar-fill" style="width:'+pct+'%;background:'+color+'"></span></span>'+
+        '<span>'+fmt(sev[k])+'</span></div>';
+    });
+    sevCard.innerHTML = sevHtml;
+    c.appendChild(sevCard);
+
+    // Tool categories special card
+    var cat = state.summary.tool_category || {};
+    var catCard = document.createElement('div');
+    catCard.className = 'card special';
+    var catHtml = '<div class="special-title">tool categories</div>';
+    var maxCat = 1;
+    Object.keys(cat).forEach(function(k){ if(cat[k] > maxCat) maxCat = cat[k]; });
+    Object.keys(cat).sort(function(a,b){ return cat[b]-cat[a]; }).forEach(function(k){
+      var pct = Math.round(100 * cat[k] / maxCat);
+      catHtml += '<div class="bar-row"><span class="lab" title="'+esc(k)+'">'+esc(k)+'</span>'+
+        '<span class="bar-track"><span class="bar-fill" style="width:'+pct+'%;background:var(--accent)"></span></span>'+
+        '<span>'+fmt(cat[k])+'</span></div>';
+    });
+    catCard.innerHTML = catHtml;
+    c.appendChild(catCard);
+  }
+
+  // ---- table picker ----
+  function renderTableSelect(){
+    var sel = dom.tableSelect;
+    sel.innerHTML = '';
+    state.tables.forEach(function(t){
+      var o = document.createElement('option');
+      o.value = t.name; o.textContent = t.name;
+      sel.appendChild(o);
+    });
+    if(state.currentTable) sel.value = state.currentTable;
+  }
+
+  // ---- view router: home (metrics) <-> kb sub-views (no persistent sidebar) ----
+  function showKbView(cat){
+    var titles = { tables:'Browse Tables', search:'Search', row:'Inspect Row' };
+    var hints = {
+      tables: 'Pick a table, scroll the windowed list. Click a row to inspect it.',
+      search: 'Type to search the current table; results stream in live. Pick a table first if none is loaded.',
+      row: 'Pick a table, then click any row to open its full detail in the side panel.'
+    };
+    dom.kbTitle.textContent = titles[cat] || 'Browse';
+    dom.kbHint.textContent = hints[cat] || '';
+    dom.homeView.hidden = true;
+    dom.kbView.hidden = false;
+    // make sure a table is loaded so the view is populated
+    if(!state.currentTable && state.tables.length){
+      var preferred = ['vulnerabilities','security_tools','sources','libraries','patterns','tutorials'];
+      var choice = null;
+      for(var i=0;i<preferred.length;i++){ if(state.tableMap[preferred[i]]){ choice = preferred[i]; break; } }
+      if(!choice) choice = state.tables[0].name;
+      selectTable(choice);
+    } else if(state.currentTable){
+      resetAndLoad();
+    }
+    if(cat === 'search'){ setTimeout(function(){ dom.search.focus(); }, 30); }
+  }
+  function showHome(){
+    dom.kbView.hidden = true;
+    dom.homeView.hidden = false;
+    renderMetrics(); // refresh metrics on return
+  }
+  dom.catbar.addEventListener('click', function(e){
+    var btn = e.target.closest('.cat');
+    if(btn) showKbView(btn.getAttribute('data-cat'));
+  });
+  dom.backBtn.addEventListener('click', showHome);
+
+  // ---- header (sortable) ----
+  function renderHeader(){
+    var h = dom.head;
+    h.innerHTML = '';
+    state.columns.forEach(function(col){
+      var th = document.createElement('div');
+      th.className = 'th';
+      var arrow = (col.name === state.sort) ? (state.dir === 'asc' ? '▲' : '▼') : '';
+      th.innerHTML = '<span class="label"></span>'+
+        (arrow ? '<span class="arrow">'+arrow+'</span>' : '')+
+        '<span class="ctype">'+esc(col.type || '')+(col.nullable?'?':'')+'</span>';
+      th.querySelector('.label').textContent = col.name;
+      th.title = 'sort by ' + col.name;
+      th.addEventListener('click', function(){ toggleSort(col.name); });
+      h.appendChild(th);
+    });
+  }
+  function esc(s){ return String(s).replace(/[&<>]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]; }); }
+
+  // ---- interaction metrics (analytics; best-effort, never blocks the UI) ----
+  function getCookie(name){
+    var m = document.cookie.match(new RegExp('(?:^|; )' + name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '=([^;]*)'));
+    return m ? decodeURIComponent(m[1]) : null;
+  }
+  // Fire-and-forget event logging. If no METRICS_VISITOR cookie is present we do nothing
+  // (the server issues the cookie; without it there is no visitor id to attribute to).
+  function track(event, table, meta){
+    try {
+      if(!getCookie('METRICS_VISITOR')) return;
+      var body = {event: event};
+      if(table !== undefined && table !== null) body.table = String(table);
+      if(meta !== undefined && meta !== null) body.meta = String(meta);
+      // best-effort POST; swallow ALL errors so analytics never breaks the dashboard
+      fetch('/api/metrics', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+        body: JSON.stringify(body)
+      }).catch(function(){});
+    } catch (e) { /* analytics must never throw into the UI */ }
+  }
+
+  // ---- metrics summary panel ----
+  function barRow(label, val, max, color){
+    var row = document.createElement('div');
+    row.className = 'bar-row';
+    var lab = document.createElement('span');
+    lab.className = 'lab'; lab.textContent = label; lab.title = label;
+    var track = document.createElement('span');
+    track.className = 'bar-track';
+    var fill = document.createElement('span');
+    fill.className = 'bar-fill';
+    fill.style.width = (max > 0 ? Math.round(100 * val / max) : 0) + '%';
+    fill.style.background = color;
+    track.appendChild(fill);
+    var num = document.createElement('span');
+    num.textContent = fmt(val);
+    row.appendChild(lab); row.appendChild(track); row.appendChild(num);
+    return row;
+  }
+  function paintMetrics(s){
+    var stats = dom.metricsStats;
+    stats.innerHTML = '';
+    var grid = [
+      {lab: 'visits', v: s ? s.visits : null},
+      {lab: 'unique visitors', v: s ? s.unique_visitors : null},
+      {lab: 'events', v: s ? s.events : null},
+      {lab: 'active sessions', v: s ? s.active_sessions : null}
+    ];
+    grid.forEach(function(g){
+      var card = document.createElement('div');
+      card.className = 'card';
+      var t = document.createElement('div');
+      t.className = 'special-title'; t.textContent = g.lab;
+      var tot = document.createElement('div');
+      tot.className = 'tot'; tot.textContent = (g.v === null || g.v === undefined) ? '—' : fmt(g.v);
+      card.appendChild(t); card.appendChild(tot);
+      stats.appendChild(card);
+    });
+
+    var byEvent = (s && s.by_event) || {};
+    var beKeys = Object.keys(byEvent);
+    var be = dom.metricsByEvent;
+    be.innerHTML = '';
+    if(!beKeys.length){
+      be.innerHTML = '<div class="metrics-empty">no events yet</div>';
+    } else {
+      var maxBe = 1;
+      beKeys.forEach(function(k){ if(byEvent[k] > maxBe) maxBe = byEvent[k]; });
+      beKeys.forEach(function(k){ be.appendChild(barRow(k, byEvent[k], maxBe, 'var(--accent2)')); });
+    }
+
+    var topT = (s && s.top_tables) || [];
+    var tt = dom.metricsTopTables;
+    tt.innerHTML = '';
+    if(!topT.length){
+      tt.innerHTML = '<div class="metrics-empty">no table activity yet</div>';
+    } else {
+      var maxTt = 1;
+      topT.forEach(function(t){ if(t.n > maxTt) maxTt = t.n; });
+      topT.forEach(function(t){ tt.appendChild(barRow(t.table, t.n, maxTt, 'var(--accent)')); });
+    }
+  }
+  function renderMetrics(){
+    api('/api/metrics/summary').then(function(s){
+      paintMetrics(s || {});
+    }).catch(function(err){
+      console.warn('metrics summary failed', err);
+      paintMetrics(null);
+    });
+  }
+
+  function toggleSort(name){
+    track('sort', state.currentTable, name);
+    if(state.sort === name){
+      state.dir = (state.dir === 'asc') ? 'desc' : 'asc';
+    } else {
+      state.sort = name;
+      state.dir = 'asc';
+    }
+    renderHeader();
+    resetAndLoad();
+  }
+
+  // ---- query string ----
+  function buildRowsUrl(after){
+    var p = new URLSearchParams();
+    p.set('table', state.currentTable);
+    p.set('sort', state.sort);
+    p.set('dir', state.dir);
+    p.set('limit', String(LIMIT));
+    if(state.q) p.set('q', state.q);
+    if(after) p.set('after', after);
+    return '/api/rows?' + p.toString();
+  }
+
+  // ---- spacer ----
+  function updateSpacer(){
+    var logical = Math.max(state.expectedTotal, state.rows.length);
+    var h = Math.min(MAX_SPACER, logical * ROW_H);
+    dom.spacer.style.height = h + 'px';
+  }
+
+  // ---- status line ----
+  function updateStatus(){
+    if(dom.stTable) dom.stTable.textContent = state.currentTable || '—';
+    if(dom.stTotal) dom.stTotal.textContent = fmt(state.expectedTotal);
+    if(dom.stLoaded) dom.stLoaded.textContent = fmt(state.rows.length);
+  }
+  function setHealth(ok, info){
+    state.health = ok;
+    if(dom.stHealth){
+      dom.stHealth.className = ok ? 'health-ok' : 'health-err';
+      dom.stHealth.textContent = 'health: ' + (ok ? 'ok' : 'ERR') + (info ? ' ('+info+')' : '');
+    }
+  }
+
+  // ---- fetch one keyset page and append to buffer ----
+  function fetchPage(after){
+    state.fetching = true;
+    setLoading(true);
+    return api(buildRowsUrl(after)).then(function(data){
+      var items = Array.isArray(data.items) ? data.items : [];
+      // de-dup guard (keyset can in theory repeat at the cursor edge)
+      for(var i=0;i<items.length;i++){
+        var it = items[i];
+        if(state.rows.length && state.rows[state.rows.length-1].id === it.id && state.rows[state.rows.length-1] === it){ continue; }
+        state.rows.push(it);
+      }
+      if(typeof data.total === 'number') state.expectedTotal = data.total;
+      state.nextCursor = (data.next_cursor === undefined ? null : data.next_cursor);
+      updateSpacer();
+      updateStatus();
+    }).finally(function(){
+      state.fetching = false;
+      setLoading(false);
+    });
+  }
+
+  // ---- ensure buffer covers logical index (keyset forward fill) ----
+  var ENSURE_MAX_DEPTH = 256; // hard cap on chained prefetch to prevent fetch storms
+  function ensureLoaded(index, _depth){
+    _depth = _depth || 0;
+    if(state.fetching) return Promise.resolve();
+    if(index <= state.rows.length) return Promise.resolve();
+    if(state.nextCursor == null) return Promise.resolve();
+    if(_depth >= ENSURE_MAX_DEPTH) return Promise.resolve();
+    var before = state.rows.length;
+    return fetchPage(state.nextCursor).then(function(){
+      // terminate if no progress was made (empty page but cursor still set)
+      if(state.rows.length === before) return Promise.resolve();
+      // continue filling until covered or exhausted
+      var sc = dom.scroll;
+      var start = Math.max(0, Math.floor(sc.scrollTop / ROW_H) - OVERSCAN);
+      var vis = Math.ceil(sc.clientHeight / ROW_H) + OVERSCAN * 2;
+      if(start + vis > state.rows.length && state.nextCursor != null){
+        return ensureLoaded(start + vis, _depth + 1);
+      }
+      return Promise.resolve();
+    });
+  }
+
+  // ---- windowed render (only visible slice in DOM) ----
+  function renderWindow(start, visible){
+    start = Math.max(0, start);
+    var end = Math.min(state.rows.length, start + visible);
+    var layer = dom.rowsLayer;
+    // clear
+    while(layer.firstChild) layer.removeChild(layer.firstChild);
+    var frag = document.createDocumentFragment();
+    for(var i = start; i < end; i++){
+      var row = state.rows[i];
+      var rid = (row && (row.id !== undefined)) ? row.id : null;
+      var d = document.createElement('div');
+      d.className = 'row' + (rid !== null && rid === state.selectedId ? ' selected' : '');
+      d.style.transform = 'translateY(' + (i * ROW_H) + 'px)';
+      var cols = state.columns;
+      for(var c = 0; c < cols.length; c++){
+        var cell = document.createElement('div');
+        cell.className = 'cell';
+        var f = formatCell(row ? row[cols[c].name] : undefined);
+        if(f.isNull) cell.className += ' null';
+        cell.textContent = f.text;
+        cell.title = f.text;
+        d.appendChild(cell);
+      }
+      (function(id){
+        d.addEventListener('click', function(){ if(id !== null) openDetail(id); });
+      })(rid);
+      frag.appendChild(d);
+    }
+    layer.appendChild(frag);
+  }
+
+  // ---- master render (scroll-driven) ----
+  var renderScheduled = false;
+  function scheduleRender(){
+    if(renderScheduled) return;
+    renderScheduled = true;
+    requestAnimationFrame(function(){
+      renderScheduled = false;
+      renderNow();
+    });
+  }
+  function renderNow(){
+    var sc = dom.scroll;
+    var start = Math.max(0, Math.floor(sc.scrollTop / ROW_H) - OVERSCAN);
+    var visible = Math.ceil(sc.clientHeight / ROW_H) + OVERSCAN * 2;
+    renderWindow(start, visible);
+    if(start + visible > state.rows.length && state.nextCursor != null){
+      ensureLoaded(start + visible).then(scheduleRender);
+    }
+  }
+
+  // ---- (re)load current table from scratch ----
+  function resetAndLoad(){
+    state.rows = [];
+    state.nextCursor = null;
+    state.expectedTotal = 0;
+    state.selectedId = null;
+    dom.scroll.scrollTop = 0;
+    updateSpacer();
+    updateStatus();
+    if(!state.currentTable) return;
+    fetchPage(null).then(scheduleRender).catch(function(err){
+      showTableError(err);
+    });
+  }
+
+  function showTableError(err){
+    var layer = dom.rowsLayer;
+    while(layer.firstChild) layer.removeChild(layer.firstChild);
+    var e = document.createElement('div');
+    e.className = 'empty-state';
+    e.textContent = 'failed to load rows: ' + (err && err.message ? err.message : err);
+    layer.appendChild(e);
+  }
+
+  function selectTable(name){
+    track('table_select', name);
+    var entry = state.tableMap[name];
+    if(!entry) return;
+    state.currentTable = name;
+    state.columns = Array.isArray(entry.columns) ? entry.columns : [];
+    if(!state.columns.length && Array.isArray(entry.rows)){ /* fallback: infer from first row */ }
+    // default sort
+    var hasId = state.columns.some(function(c){ return c.name === 'id'; });
+    state.sort = hasId ? 'id' : (state.columns[0] ? state.columns[0].name : 'id');
+    state.dir = 'desc';
+    state.q = '';
+    dom.search.value = '';
+    dom.tableSelect.value = name;
+    applyGridTemplate();
+    renderHeader();
+    renderCards(); // refresh active highlight
+    resetAndLoad();
+  }
+
+  // ---- detail drawer ----
+  function openDetail(id){
+    track('row_open', state.currentTable, id);
+    state.selectedId = id;
+    renderNow(); // refresh selection highlight
+    dom.drawerTitle.textContent = state.currentTable + ' #' + id;
+    dom.drawerBody.innerHTML = '<div class="kv">loading…</div>';
+    dom.drawer.classList.add('open');
+    api('/api/row/' + encodeURIComponent(state.currentTable) + '/' + encodeURIComponent(id))
+      .then(function(data){
+        var row = data.row || {};
+        var html = '<h3>row</h3><pre>' + esc(JSON.stringify(row, null, 2)) + '</pre>';
+        if(Array.isArray(data.sources) && data.sources.length){
+          html += '<h3>resolved sources</h3>';
+          data.sources.forEach(function(s){
+            var u = s.url ? ' <span class="u">'+esc(s.url)+'</span>' : '';
+            html += '<div class="src"><span class="t">'+esc(s.title || '(untitled)')+'</span>'+u+'</div>';
+          });
+        } else if(Array.isArray(data.advisory_keys) && data.advisory_keys.length){
+          html += '<h3>advisory keys</h3><pre>' + esc(JSON.stringify(data.advisory_keys, null, 2)) + '</pre>';
+        } else if(data.sources || data.advisory_keys){
+          html += '<div class="kv">no linked sources</div>';
+        }
+        dom.drawerBody.innerHTML = html;
+      })
+      .catch(function(err){
+        dom.drawerBody.innerHTML = '<div class="kv">failed to load detail: ' +
+          esc(err && err.message ? err.message : err) + '</div>';
+      });
+  }
+  function closeDrawer(){
+    dom.drawer.classList.remove('open');
+    state.selectedId = null;
+    renderNow();
+  }
+
+  // ---- events ----
+  dom.scroll.addEventListener('scroll', scheduleRender, {passive:true});
+  dom.tableSelect.addEventListener('change', function(){ selectTable(this.value); });
+  dom.drawerClose.addEventListener('click', closeDrawer);
+
+  var searchTimer = null;
+  dom.search.addEventListener('input', function(){
+    var v = this.value.trim();
+    if(searchTimer) clearTimeout(searchTimer);
+    searchTimer = setTimeout(function(){
+      state.q = v;
+      track('search', state.currentTable, v);
+      resetAndLoad();
+    }, 300); // debounce
+  });
+  dom.resetBtn.addEventListener('click', function(){
+    track('filter', state.currentTable);
+    state.q = ''; dom.search.value = '';
+    var hasId = state.columns.some(function(c){ return c.name === 'id'; });
+    state.sort = hasId ? 'id' : (state.columns[0] ? state.columns[0].name : 'id');
+    state.dir = 'desc';
+    renderHeader();
+    resetAndLoad();
+  });
+  window.addEventListener('resize', scheduleRender);
+
+  // ---- boot ----
+  function boot(){
+    track('page_view');
+    renderMetrics();
+    // health ping
+    api('/health').then(function(d){
+      setHealth(true, d && d.status ? d.status : '');
+    }).catch(function(){
+      setHealth(false, 'no /health');
+    });
+
+    // tables + summary in parallel; degrade gracefully
+    var pTables = api('/api/tables').then(function(list){
+      state.tables = Array.isArray(list) ? list : [];
+      state.tables.forEach(function(t){ state.tableMap[t.name] = t; });
+      renderTableSelect();
+    }).catch(function(err){
+      dom.tableSelect.innerHTML = '<option>— tables unavailable —</option>';
+      console.warn('tables failed', err);
+    });
+
+    var pSummary = api('/api/summary').then(function(s){
+      state.summary = s || null;
+      renderCards();
+    }).catch(function(err){
+      state.summary = null;
+      renderCards();
+      console.warn('summary failed', err);
+    });
+
+    Promise.all([pTables, pSummary]).then(function(){
+      // pick first table (or a sensible default)
+      var preferred = ['vulnerabilities','tools','sources','measurements','devices','raw'];
+      var choice = null;
+      for(var i=0;i<preferred.length;i++){
+        if(state.tableMap[preferred[i]]){ choice = preferred[i]; break; }
+      }
+      if(!choice && state.tables.length) choice = state.tables[0].name;
+      if(choice) selectTable(choice);
+    });
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    boot();
+  }
+})();
+</script>
+</body>
+</html>
