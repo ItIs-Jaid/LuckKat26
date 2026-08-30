@@ -1,0 +1,259 @@
+{
+  "libraries": [
+    {
+      "language": "JavaScript/Node",
+      "name": "dotenv",
+      "category": "12-factor config",
+      "purpose": "Loads environment-specific config from a .env file into process.env, keeping config out of code (12-factor factor III: config in the environment).",
+      "ecosystem": "npm",
+      "version": "17.4.2",
+      "url": "https://github.com/motdotla/dotenv"
+    },
+    {
+      "language": "Ruby",
+      "name": "foreman",
+      "category": "12-factor process management",
+      "purpose": "Runs Procfile-defined processes as a single formation, modeling the 12-factor 'processes' and 'concurrency' factors for local dev and PaaS-style execution.",
+      "ecosystem": "RubyGems",
+      "version": "0.90.0",
+      "url": "https://github.com/ddollar/foreman"
+    },
+    {
+      "language": "Go",
+      "name": "prometheus",
+      "category": "observability (metrics)",
+      "purpose": "Time-series metrics database with a pull-based scrape model and PromQL; central to the metrics half of observability.",
+      "ecosystem": "CNCF",
+      "version": "v3.12.0",
+      "url": "https://github.com/prometheus/prometheus"
+    },
+    {
+      "language": "TypeScript/Go",
+      "name": "grafana",
+      "category": "observability (dashboards/visualization)",
+      "purpose": "Dashboards and alerting over Prometheus/Loki/Tempo data; the visualization layer of the observability stack.",
+      "ecosystem": "Grafana Labs",
+      "version": "v13.2.0",
+      "url": "https://github.com/grafana/grafana"
+    },
+    {
+      "language": "Go",
+      "name": "loki",
+      "category": "observability (logs)",
+      "purpose": "Horizontally-scalable, label-indexed log aggregation system that pairs with PromQL/Grafana (the 'LOGS' of metrics/logs/traces).",
+      "ecosystem": "Grafana Labs",
+      "version": "v3.7.6",
+      "url": "https://github.com/grafana/loki"
+    },
+    {
+      "language": "Go",
+      "name": "argo-cd",
+      "category": "GitOps",
+      "purpose": "Declarative, GitOps continuous delivery for Kubernetes; reconciles cluster state to a Git repo and supports automated sync + self-heal.",
+      "ecosystem": "CNCF (Argo)",
+      "version": "v3.5.1",
+      "url": "https://github.com/argoproj/argo-cd"
+    },
+    {
+      "language": "Go",
+      "name": "flux (flux2)",
+      "category": "GitOps",
+      "purpose": "Toolkit of controllers that automates cluster state from Git/OCI sources using a set of composable, Kubernetes-native APIs.",
+      "ecosystem": "CNCF",
+      "version": "v2.9.4",
+      "url": "https://github.com/fluxcd/flux2"
+    },
+    {
+      "language": "Go",
+      "name": "vault",
+      "category": "secrets management",
+      "purpose": "Centralized dynamic secrets, encryption-as-a-service, and fine-grained access policies for least-privilege secret distribution.",
+      "ecosystem": "HashiCorp",
+      "version": "v2.0.4",
+      "url": "https://github.com/hashicorp/vault"
+    },
+    {
+      "language": "Go",
+      "name": "sops",
+      "category": "secrets management",
+      "purpose": "Encrypts secrets (YAML/JSON/env) at rest with KMS/GPG/age so they can be safely committed to Git; decrypts per-key with least-privilege IAM.",
+      "ecosystem": "Mozilla / CNCF sandbox",
+      "version": "v3.13.3",
+      "url": "https://github.com/getsops/sops"
+    },
+    {
+      "language": "Bash",
+      "name": "wait-for-it",
+      "category": "health/readiness (startup gating)",
+      "purpose": "Pure-bash script that blocks container startup until a TCP host:port is reachable, preventing race conditions between dependent services.",
+      "ecosystem": "community",
+      "version": null,
+      "note": "No semver releases; distributed via git tags / master.",
+      "url": "https://github.com/vishnubob/wait-for-it"
+    },
+    {
+      "language": "Go",
+      "name": "dockerize",
+      "category": "health/readiness (startup gating + templating)",
+      "purpose": "Utility to wait for services to be available and render templated config from environment variables before launching the main process.",
+      "ecosystem": "community",
+      "version": "v0.11.0",
+      "url": "https://github.com/jwilder/dockerize"
+    }
+  ],
+  "patterns": [
+    {
+      "title": "12-factor app: config in env, stateless processes, logs as streams",
+      "problem": "Apps that bake config into code, keep state on disk, or write logs to files become non-portable and can't scale horizontally across environments.",
+      "solution": "Store config in the environment (factor III), run as stateless processes that share nothing (factor VI), and stream logs to stdout/stderr as event streams (factor XI) for the execution environment to capture.",
+      "anti_pattern": "Hardcoding DATABASE_URL in source, writing PID files / session state to local disk, or logging to a local file the operator must tail.",
+      "snippet": "image: myapp:1.2.3\nenvironment:\n  - DATABASE_URL=${DATABASE_URL}\n  - LOG_LEVEL=info\n# process logs to stdout; orchestrator collects the stream"
+    },
+    {
+      "title": "Immutable infrastructure",
+      "problem": "Patching running servers (config drift, 'snowflake' nodes) makes environments unreproducible and rollbacks impossible.",
+      "solution": "Build a fully-baked, versioned image/artifact once; deploy by replacing instances rather than mutating them, so any version is reproducible and rollback is just 'redeploy the old image'.",
+      "anti_pattern": "SSH-ing into a production container to apt-get upgrade or edit config in place; treating containers as long-lived VMs.",
+      "snippet": "FROM alpine:3.21\nCOPY --from=build /app/bin/server /usr/local/bin/server\n# no ssh, no runtime apt-get; redeploy a new image to change behavior\nCMD [\"/usr/local/bin/server\"]"
+    },
+    {
+      "title": "GitOps: Git as the single source of truth",
+      "problem": "Cluster state edited by hand or by divergent CI pipelines drifts from intent and can't be audited or reproduced.",
+      "solution": "Declare desired state in Git; a controller continuously reconciles the cluster to the repo, with automated sync, pruning, and self-healing. Changes go through PRs, not kubectl.",
+      "anti_pattern": "Manually kubectl apply-ing to prod, or running imperative deploy scripts that bypass the Git record.",
+      "snippet": "kind: Application\nspec:\n  source: { repoURL: https://github.com/org/gitops-repo, path: apps/myapp }\n  destination: { server: https://kubernetes.default.svc }\n  syncPolicy: { automated: { prune: true, selfHeal: true } }"
+    },
+    {
+      "title": "Health & readiness probes",
+      "problem": "Traffic reaches pods that aren't ready or that are dead, causing cascading failures and broken requests during startup.",
+      "solution": "Use readiness probes to gate traffic until dependencies are available, liveness probes to restart hung processes, and startup probes for slow boots — each checking a real internal condition, not just 'process alive'.",
+      "anti_pattern": "A liveness probe that hits '/healthz' but only checks process liveness (a 'lying' probe), or using a single probe for both readiness and liveness.",
+      "snippet": "readinessProbe:\n  httpGet: { path: /ready, port: 8080 }\n  periodSeconds: 5\nlivenessProbe:\n  httpGet: { path: /healthz, port: 8080 }\n  initialDelaySeconds: 10"
+    },
+    {
+      "title": "Blue-green & canary deployments",
+      "problem": "Big-bang deploys risk outages with no fast escape hatch when a regression ships.",
+      "solution": "Blue-green runs two identical environments and flips a router/selector after validation; canary shifts a small percentage of traffic to the new version first, then ramps as metrics stay healthy.",
+      "anti_pattern": "Deploying to all nodes at once with no traffic split and no instant rollback path.",
+      "snippet": "# blue-green: flip Service selector after validation\nkind: Service\nspec:\n  selector: { app: myapp, version: green }  # swap blue <-> green"
+    },
+    {
+      "title": "Observability: metrics, logs, traces",
+      "problem": "Black-box monitoring can't localize failures; you can't tell why latency spiked or which request failed.",
+      "solution": "Expose Prometheus-format metrics from every service, ship logs to a centralized store (Loki), and correlate with traces; build dashboards and alerts on the metrics, not on gut feel.",
+      "anti_pattern": "Logging only to local files and relying on 'is the server up?' pings with no golden-signal dashboards.",
+      "snippet": "scrape_configs:\n  - job_name: myapp\n    static_configs:\n      - targets: ['myapp:8080']\n# app exposes /metrics in Prometheus text format; logs -> Loki; dashboards -> Grafana"
+    },
+    {
+      "title": "Least-privilege & secrets management",
+      "problem": "Long-lived .env files and over-broad credentials leak and grant attackers lateral movement.",
+      "solution": "Store secrets encrypted in Git (SOPS, pinned to a single KMS key/role) or broker them through Vault with short-lived, narrowly-scoped leases; never commit plaintext secrets.",
+      "anti_pattern": "Committing a .env with real API keys to the repo, or granting a single wildcard IAM role to every service.",
+      "snippet": "# .sops.yaml — encrypt secrets in git, decrypt only with a specific KMS key\ncreation_rules:\n  - kms: \"arn:aws:kms:us-east-1:111122223333:key/abcd...\""
+    },
+    {
+      "title": "Small, reversible changes",
+      "problem": "Large, irreversible changes are hard to review and dangerous to roll back, maximizing blast radius when something breaks.",
+      "solution": "Make frequent, small, independently deployable and reversible changes (feature flags + trunk-based commits) so any single change can be undone without a redeploy.",
+      "anti_pattern": "A 4000-line 'big bang' release toggled by a single risky migration with no off-switch.",
+      "snippet": "git commit -m \"feat: add flag orders.v2 (off by default)\"\n# ship dark, enable per-user, revert with one flag flip"
+    }
+  ],
+  "tutorials": [
+    {
+      "title": "The Twelve-Factor App (official methodology)",
+      "url": "https://12factor.net/",
+      "level": "beginner",
+      "summary": "The canonical 12 factors (config, processes, logs, build/release/run, etc.) that underpins most modern cloud-native ops patterns."
+    },
+    {
+      "title": "Kubernetes Health Checks Best Practices",
+      "url": "https://kubernetes.recipes/recipes/configuration/kubernetes-health-checks",
+      "level": "intermediate",
+      "summary": "Hands-on liveness/readiness/startup probe recipes showing correct gating of traffic and restart behavior."
+    },
+    {
+      "title": "Deployment Strategies: Blue-Green, Canary, and Rolling",
+      "url": "https://kubernetes.recipes/recipes/deployments/deployment-strategies",
+      "level": "intermediate",
+      "summary": "Worked examples of blue-green, canary, and rolling updates with traffic-shaping and rollback guidance."
+    },
+    {
+      "title": "The Ultimate Self-Hosted Observability Stack: Prometheus + Grafana + Loki",
+      "url": "https://dev.to/enfernandes/the-ultimate-self-hosted-observability-stack-prometheus-grafana-loki-uptime-kuma-4bmc",
+      "level": "intermediate",
+      "summary": "End-to-end local observability stack (metrics + logs + uptime) well-suited to a Windows 11 + Docker Desktop home lab."
+    },
+    {
+      "title": "Secret Management in DevOps (Vault, SOPS)",
+      "url": "https://moss.sh/devops-monitoring/secret-management-in-devops-vault-sops",
+      "level": "intermediate",
+      "summary": "Compares Vault vs SOPS for encrypted, least-privilege secrets that can live safely in Git."
+    }
+  ],
+  "repos_or_threads": [
+    {
+      "title": "argoproj/argo-cd — reference GitOps engine",
+      "url": "https://github.com/argoproj/argo-cd",
+      "why": "The de-facto GitOps continuous-delivery controller; its Application/AppProject CRDs are the concrete realization of the GitOps pattern with automated sync + self-heal."
+    },
+    {
+      "title": "getsops/sops — encrypted secrets you can commit to Git",
+      "url": "https://github.com/getsops/sops",
+      "why": "Strong real-world least-privilege pattern: secrets encrypted with KMS/age, keyed to specific roles, safe to store in Git alongside manifests."
+    },
+    {
+      "title": "kelseyhightower/kubernetes-the-hard-way",
+      "url": "https://github.com/kelseyhightower/kubernetes-the-hard-way",
+      "why": "Widely-endorsed, meticulous walkthrough of bootstrapping a Kubernetes cluster by hand — the canonical demonstration of immutable-infrastructure and declarative-state thinking."
+    },
+    {
+      "title": "r/devops: 'Any must read suggestions? 12factor app, etc.'",
+      "url": "https://www.reddit.com/r/devops/comments/1i34812/any_must_read_suggestions_12factor_app_etc/",
+      "why": "Community consensus thread endorsing 12factor.net, Google SRE, and Accelerate as the foundational ops reading list for practitioners."
+    },
+    {
+      "title": "r/kubernetes: 'How do you manage your git repository when using ArgoCD?'",
+      "url": "https://reddit.com/r/kubernetes/comments/1kgx673/how_do_you_manage_your_git_repository_when_using",
+      "why": "Real-world discussion of GitOps repo structure (app-of-apps, separate app vs cluster repos) — shows how practitioners actually shape the GitOps pattern."
+    }
+  ],
+  "sources": [
+    {
+      "kind": "official-docs",
+      "title": "The Twelve-Factor App",
+      "url": "https://12factor.net/",
+      "tier": 3
+    },
+    {
+      "kind": "official-docs",
+      "title": "Kubernetes: Container Probes (liveness/readiness/startup)",
+      "url": "https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes",
+      "tier": 3
+    },
+    {
+      "kind": "official-docs",
+      "title": "Argo CD Documentation (GitOps continuous delivery)",
+      "url": "https://argo-cd.readthedocs.io/",
+      "tier": 3
+    },
+    {
+      "kind": "official-docs",
+      "title": "Flux GitOps Toolkit Documentation",
+      "url": "https://fluxcd.io/docs/",
+      "tier": 3
+    },
+    {
+      "kind": "reddit-thread",
+      "title": "r/devops — 'Any must read suggestions? 12factor app, etc.'",
+      "url": "https://www.reddit.com/r/devops/comments/1i34812/any_must_read_suggestions_12factor_app_etc/",
+      "tier": 1
+    },
+    {
+      "kind": "reddit-thread",
+      "title": "r/kubernetes — 'How do you manage your git repository when using ArgoCD?'",
+      "url": "https://reddit.com/r/kubernetes/comments/1kgx673/how_do_you_manage_your_git_repository_when_using",
+      "tier": 1
+    }
+  ]
+}

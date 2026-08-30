@@ -1,0 +1,50 @@
+DevSecLoc Knowledge Base — plain-English plan
+==============================================
+
+WHAT WE'RE BUILDING
+A personal, local-first knowledge base that lives on this machine. It is the single
+reference I (the agent) and you can check whenever a coding question comes up. It covers
+Python, C/C++, web (JavaScript/TypeScript), DevOps/Docker, and security, plus the patterns
+that show up repeatedly in well-built systems (mined from GitHub and Reddit).
+
+WHERE THE DATA ACTUALLY LIVES
+The real store is a single SQLite file — no server, works offline. Alongside it we generate
+plain-text and CSV exports that are JUST for easy human review. Those exports are not the
+database and not code — they are a readable mirror so you can skim what is inside without
+opening SQLite. Later we can push the whole thing to a GitHub repo; nothing goes to the
+cloud until you say so.
+
+WHAT IS INSIDE (TABLES)
+languages, libraries, patterns, tutorials, sources, vulnerabilities, methodologies,
+code_reviews, errors, research_runs, review_queue. Every entry records where it came from
+and how confident we are, so nothing is unsourced.
+
+HOW WE RESEARCH IT (THE AGENT TEAM)
+I run the show: own the schema, the master DB, the scheduler, and the model-approval gate.
+Under me, five supervisor agents split the work by domain (Python, C/C++, web, DevOps,
+security). Each supervisor hands a few leaf agents a single narrow topic — go find the best
+libraries, tutorials, and real-world patterns, with sources. Supervisors normalize
+everything into the schema; I merge it into SQLite and regenerate the exports.
+
+KEEPING IT FRESH (DETERMINISTIC + GATED LLM)
+A daily job runs on a fixed schedule. The deterministic part needs no AI: it checks official
+vulnerability feeds (NVD, GitHub Advisories, OSV) for the ecosystems we care about, and
+re-checks that our stored links still work. When something new shows up, or weekly for a
+roundup, the LLM step kicks in to summarize and classify it — but ONLY after pausing to ask
+YOU which model should do the reasoning. If you do not answer, it sticks to the deterministic
+path and just logs the raw findings.
+
+LEARNING FROM OUR OWN WORK
+Whenever we write or debug code in this repo, we log it to the code_reviews / errors tables
+with structure. Once verified, those lessons feed back into the patterns and libraries
+tables, so the KB gets sharper the more we build.
+
+ORDER OF WORK (after you approve)
+1. Build the schema, export + capture + updater scripts, and the daily-job definition.
+2. Dispatch the five supervisors and their leaf agents; merge findings into the DB;
+   regenerate exports.
+3. Run the deterministic updater once, validate the DB and exports, and show you a summary.
+
+GITHUB
+We commit locally now. When you give the word, we add the remote and push. No cloud writes
+before that.

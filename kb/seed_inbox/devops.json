@@ -1,0 +1,373 @@
+{
+  "domain": "devops",
+  "languages": [
+    {
+      "name": "Docker",
+      "version": "27",
+      "role": "local container runtime/infra (Docker Desktop, Windows 11 + WSL2)",
+      "notes": "Primary local-first infra; Compose for multi-service stacks"
+    },
+    {
+      "name": "Terraform / HCL",
+      "version": "1.15",
+      "role": "infrastructure as code",
+      "notes": "kreuzwerker/docker provider manages local Docker as code; OpenTofu is a drop-in OSS alt"
+    },
+    {
+      "name": "GitHub Actions (YAML)",
+      "version": "v4",
+      "role": "CI/CD automation",
+      "notes": "Workflows for build/test/deploy; OIDC keyless auth to cloud"
+    },
+    {
+      "name": "Bash",
+      "version": "-",
+      "role": "startup gating scripts",
+      "notes": "wait-for-it / dockerize for service-readiness gating inside containers"
+    }
+  ],
+  "libraries": [
+    {
+      "language": "Docker",
+      "name": "compose",
+      "category": "orchestration",
+      "purpose": "Define and run multi-container apps from a single declarative compose.yaml (services, networks, volumes, startup order).",
+      "ecosystem": "docker",
+      "version": "5.5.0"
+    },
+    {
+      "language": "Docker",
+      "name": "buildx",
+      "category": "build",
+      "purpose": "Extended image build with BuildKit: multi-platform builds, builder instances, cache export.",
+      "ecosystem": "docker",
+      "version": "0.34.1"
+    },
+    {
+      "language": "Docker",
+      "name": "hadolint",
+      "category": "linting",
+      "purpose": "Dockerfile linter that validates best practices and inline bash (e.g. DL3008 pin apt versions).",
+      "ecosystem": "community",
+      "version": "2.15.1"
+    },
+    {
+      "language": "Docker",
+      "name": "trivy",
+      "category": "security-scanning",
+      "purpose": "Unified scanner for image/FS/IaC vulnerabilities, secrets, SBOM and misconfigurations.",
+      "ecosystem": "aquasecurity",
+      "version": "0.74.0"
+    },
+    {
+      "language": "Docker",
+      "name": "distroless",
+      "category": "base-images",
+      "purpose": "Minimal runtime base images containing only the app and its runtime deps (no shell, no package manager).",
+      "ecosystem": "googlecontainertools",
+      "version": "static-debian12 / java21-debian12"
+    },
+    {
+      "language": "SQL",
+      "name": "postgres",
+      "category": "relational-db",
+      "purpose": "Run PostgreSQL in a container for local dev/test; env-based init, one-shot /docker-entrypoint-initdb.d scripts, pg_isready readiness.",
+      "ecosystem": "docker-official-image",
+      "version": "18.6"
+    },
+    {
+      "language": "C",
+      "name": "redis",
+      "category": "cache-kv",
+      "purpose": "In-memory key-value store for caching / fast KV; persist with a named volume + appendonly; readiness via redis-cli ping.",
+      "ecosystem": "docker-official-image",
+      "version": "8.10.1"
+    },
+    {
+      "language": "YAML/Any",
+      "name": "actions/checkout",
+      "category": "source-checkout",
+      "purpose": "Checks out the repository under $GITHUB_WORKSPACE so the workflow can access it.",
+      "ecosystem": "github-actions",
+      "version": "v7.0.1"
+    },
+    {
+      "language": "Docker",
+      "name": "docker/build-push-action",
+      "category": "docker-build",
+      "purpose": "Builds and pushes Docker images with Buildx (multi-platform, secrets, remote cache, attestations) to any registry.",
+      "ecosystem": "docker",
+      "version": "v7.3.0"
+    },
+    {
+      "language": "HCL",
+      "name": "terraform-cli",
+      "category": "iac-engine",
+      "purpose": "Declarative provisioning of infrastructure via HCL configs; core plan/apply engine.",
+      "ecosystem": "hashicorp",
+      "version": "1.15.8"
+    },
+    {
+      "language": "HCL",
+      "name": "kreuzwerker/terraform-provider-docker",
+      "category": "provider",
+      "purpose": "Manage Docker resources (containers, images, networks, volumes) as code against the local Docker daemon.",
+      "ecosystem": "kreuzwerker",
+      "version": "4.4.0"
+    },
+    {
+      "language": "HCL",
+      "name": "localstack",
+      "category": "local-cloud-emulator",
+      "purpose": "Local emulation of AWS APIs (S3, Lambda, DynamoDB) for offline/cost-free Terraform testing.",
+      "ecosystem": "localstack",
+      "version": "4.14.0"
+    },
+    {
+      "language": "Go",
+      "name": "prometheus",
+      "category": "observability-metrics",
+      "purpose": "Time-series metrics database with a pull-based scrape model and PromQL; central to the metrics half of observability.",
+      "ecosystem": "cncf",
+      "version": "v3.12.0"
+    },
+    {
+      "language": "Go",
+      "name": "vault",
+      "category": "secrets-management",
+      "purpose": "Centralized dynamic secrets, encryption-as-a-service, and fine-grained access policies for least-privilege secret distribution.",
+      "ecosystem": "hashicorp",
+      "version": "v2.0.4"
+    },
+    {
+      "language": "Go",
+      "name": "argo-cd",
+      "category": "gitops",
+      "purpose": "Declarative, GitOps continuous delivery; reconciles cluster state to a Git repo with automated sync + self-heal.",
+      "ecosystem": "cncf-argo",
+      "version": "v3.5.1"
+    }
+  ],
+  "patterns": [
+    {
+      "title": "Multi-stage builds",
+      "problem": "A single-stage Dockerfile ships the whole build toolchain (compilers, SDKs, source) into the production image, bloating size and attack surface.",
+      "solution": "Use multiple FROM statements: build in one stage, then COPY only the runtime artifact into a minimal final stage (or scratch). BuildKit only builds stages your --target depends on.",
+      "anti_pattern": "FROM golang then COPY . . and RUN go build, shipping the compiler and source in the final layer.",
+      "snippet": "# syntax=docker/dockerfile:1\nFROM golang:1.26 AS build\nWORKDIR /src\nCOPY <<EOF ./main.go\npackage main\nimport \"fmt\"\nfunc main() { fmt.Println(\"hello\") }\nEOF\nRUN go build -o /bin/hello ./main.go\nFROM scratch\nCOPY --from=build /bin/hello /bin/hello\nCMD [\"/bin/hello\"]"
+    },
+    {
+      "title": "Healthchecks",
+      "problem": "A container reporting 'running' is not necessarily 'ready'; load balancers may route traffic before the app can serve it, causing 502s.",
+      "solution": "Define a healthcheck (test/interval/timeout/retries/start_period) so the runtime knows actual readiness, then gate dependents on it.",
+      "anti_pattern": "Treating the container 'Up' state as proof the service accepts connections.",
+      "snippet": "healthcheck:\n  test: [\"CMD\", \"curl\", \"-f\", \"http://localhost:3000/health\"]\n  interval: 30s\n  timeout: 10s\n  retries: 3\n  start_period: 40s"
+    },
+    {
+      "title": "Persist database data with named volumes",
+      "problem": "Container writable layers are ephemeral — recreating the DB container loses all data.",
+      "solution": "Mount a Docker named volume at the engine's data directory (e.g. /var/lib/postgresql/data for Postgres, /data for Redis).",
+      "anti_pattern": "Relying on the container's writable layer, or using host bind mounts on Windows (slow I/O and UID/permission errors).",
+      "snippet": "services:\n  db:\n    image: postgres:18.6\n    environment:\n      POSTGRES_PASSWORD: example\n    volumes:\n      - pgdata:/var/lib/postgresql/data\nvolumes:\n  pgdata:"
+    },
+    {
+      "title": "Seed/schema-load with docker-entrypoint-initdb.d",
+      "problem": "You need an initial schema, users, or seed data created only on first startup.",
+      "solution": "Mount .sql/.sh scripts into /docker-entrypoint-initdb.d; the official Postgres/MySQL entrypoints run them once on an empty data dir (alphabetical order).",
+      "anti_pattern": "Baking schema into the image (rebuild to change it) or running init manually after every `docker compose up`.",
+      "snippet": "services:\n  db:\n    image: postgres:18.6\n    environment:\n      POSTGRES_PASSWORD: example\n      POSTGRES_DB: appdb\n    volumes:\n      - ./init:/docker-entrypoint-initdb.d\n# ./init/01-schema.sql and ./init/02-seed.sql run once on first init"
+    },
+    {
+      "title": "Cache dependencies (CI)",
+      "problem": "Reinstalling dependencies on every run wastes minutes and billable CI time.",
+      "solution": "Use actions/cache with a key derived from a lockfile hash so the cache invalidates only when deps change; add restore-keys as fallbacks.",
+      "anti_pattern": "Using a constant key (cache never updates) or storing tokens/credentials in the cached path.",
+      "snippet": "- uses: actions/cache@v4\n  with:\n    path: ~/.npm\n    key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}\n    restore-keys: |\n      ${{ runner.os }}-npm-"
+    },
+    {
+      "title": "OIDC federated auth (no stored secrets)",
+      "problem": "Long-lived cloud credentials stored as GitHub secrets can leak and grant persistent access.",
+      "solution": "Set `permissions: id-token: write` and exchange GitHub's OIDC JWT for a short-lived cloud token via the provider's official action.",
+      "anti_pattern": "Storing static cloud access keys as secrets; or a trust policy not scoped to a specific repo and ref.",
+      "snippet": "permissions:\n  id-token: write\n  contents: read\njobs:\n  deploy:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: aws-actions/configure-aws-credentials@v4\n        with:\n          role-to-assume: arn:aws:iam::123456789012:role/github-oidc\n          aws-region: us-east-1"
+    },
+    {
+      "title": "Remote state backend + locking",
+      "problem": "Local terraform.tfstate is not shareable across a team, is easy to lose, and concurrent applies cause corruption.",
+      "solution": "Store state in a remote backend (e.g. S3) with encryption + versioning, and use a state-locking table (DynamoDB) so only one apply runs at a time.",
+      "anti_pattern": "Committing tfstate to git, or a backend with no locking (two engineers apply and clobber state).",
+      "snippet": "terraform {\n  backend \"s3\" {\n    bucket         = \"my-tf-state\"\n    key            = \"prod/network/terraform.tfstate\"\n    region         = \"us-east-1\"\n    dynamodb_table = \"tf-locks\"\n    encrypt        = true\n  }\n}"
+    },
+    {
+      "title": "Local testing with LocalStack",
+      "problem": "Testing Terraform against real AWS is slow and costs money; engineers can't iterate offline.",
+      "solution": "Point the AWS provider at LocalStack's endpoint (http://localhost:4566) and run plan/apply/test locally; integrate into CI for fast, free feedback.",
+      "anti_pattern": "Only ever applying against live AWS; skipping tests because 'there's no cheap way to try it'.",
+      "snippet": "provider \"aws\" {\n  access_key                  = \"test\"\n  secret_key                  = \"test\"\n  region                      = \"us-east-1\"\n  skip_credentials_validation = true\n  skip_metadata_api_check     = true\n  endpoints {\n    s3 = \"http://localhost:4566\"\n  }\n}"
+    },
+    {
+      "title": "12-factor app",
+      "problem": "Apps that bake config into code, keep state on disk, or write logs to files become non-portable and can't scale horizontally.",
+      "solution": "Store config in the environment (factor III), run as stateless processes that share nothing (factor VI), and stream logs to stdout/stderr as event streams (factor XI).",
+      "anti_pattern": "Hardcoding DATABASE_URL in source, writing session state to local disk, or logging to a local file the operator must tail.",
+      "snippet": "image: myapp:1.2.3\nenvironment:\n  - DATABASE_URL=${DATABASE_URL}\n  - LOG_LEVEL=info\n# process logs to stdout; orchestrator collects the stream"
+    },
+    {
+      "title": "GitOps: Git as single source of truth",
+      "problem": "Cluster state edited by hand or by divergent CI pipelines drifts from intent and can't be audited or reproduced.",
+      "solution": "Declare desired state in Git; a controller continuously reconciles the cluster to the repo, with automated sync, pruning, and self-healing. Changes go through PRs, not kubectl.",
+      "anti_pattern": "Manually kubectl apply-ing to prod, or running imperative deploy scripts that bypass the Git record.",
+      "snippet": "kind: Application\nspec:\n  source: { repoURL: https://github.com/org/gitops-repo, path: apps/myapp }\n  destination: { server: https://kubernetes.default.svc }\n  syncPolicy: { automated: { prune: true, selfHeal: true } }"
+    }
+  ],
+  "tutorials": [
+    {
+      "title": "Docker Compose Quickstart",
+      "url": "https://docs.docker.com/compose/gettingstarted",
+      "level": "beginner",
+      "summary": "Official hands-on intro: build a Flask + Redis hit-counter in compose.yaml; covers services, build context, env vars and the startup-race problem."
+    },
+    {
+      "title": "Multi-stage builds",
+      "url": "https://docs.docker.com/build/building/multi-stage",
+      "level": "intermediate",
+      "summary": "Official docs on multiple FROM stages, named stages, --target builds, and copying only runtime artifacts to shrink images."
+    },
+    {
+      "title": "Install MongoDB Community with Docker",
+      "url": "https://www.mongodb.com/docs/v8.0/tutorial/install-mongodb-community-with-docker/",
+      "level": "beginner",
+      "summary": "Official MongoDB docs: pull the community image, run with -p 27017:27017, connect via mongosh, notes on AVX and fsync persistence."
+    },
+    {
+      "title": "Quickstart for GitHub Actions",
+      "url": "https://docs.github.com/en/actions/get-started/quickstart",
+      "level": "beginner",
+      "summary": "Official GitHub quickstart: create your first workflow file in .github/workflows, trigger on push, run steps on a hosted runner."
+    },
+    {
+      "title": "Get Started - Docker (Terraform)",
+      "url": "https://developer.hashicorp.com/terraform/tutorials/docker-get-started",
+      "level": "beginner",
+      "summary": "Official step-by-step CLI tutorial that builds, changes, and destroys a Docker container with Terraform — ideal first contact for a local Docker Desktop setup."
+    },
+    {
+      "title": "Getting started (OpenTofu)",
+      "url": "https://opentofu.org/docs/intro/",
+      "level": "beginner",
+      "summary": "Official OpenTofu intro covering the write-init-plan-apply workflow and thousands of providers; the drop-in OSS alternative to Terraform using the same HCL."
+    },
+    {
+      "title": "The Twelve-Factor App",
+      "url": "https://12factor.net/",
+      "level": "beginner",
+      "summary": "The canonical 12 factors (config, processes, logs, build/release/run) that underpins most modern cloud-native ops patterns."
+    }
+  ],
+  "methodologies": [
+    {
+      "name": "12-Factor App",
+      "summary": "Methodology for building portable, scalable, cloud-native services: config in env, stateless processes, logs as streams.",
+      "steps": "1. Store config in environment variables (factor III), never in code\n2. Treat backing services (DB, cache) as attached resources via URLs/env\n3. Run as stateless processes that share nothing (factor VI)\n4. Stream logs to stdout/stderr as event streams (factor XI)\n5. Keep build/release/run strictly separated; one codebase per app"
+    },
+    {
+      "name": "GitOps",
+      "summary": "Git is the single source of truth for desired state; a controller continuously reconciles live infra to the repo.",
+      "steps": "1. Declare desired cluster/infra state in a Git repository\n2. A controller continuously reconciles live state to Git (Argo CD / Flux)\n3. All changes via pull requests; no manual kubectl/apply to prod\n4. Enable automated sync + prune + self-heal\n5. Roll back by reverting the Git commit"
+    },
+    {
+      "name": "Infrastructure as Code: Plan/Apply + Remote State",
+      "summary": "Declarative infra with reviewed plans and shared, locked state for safe team collaboration.",
+      "steps": "1. Write infra as declarative HCL (Terraform/OpenTofu)\n2. Store state in a remote backend with locking (S3 + DynamoDB)\n3. Run `terraform plan` and review the diff before apply\n4. Apply only the reviewed plan; gate apply behind PR review\n5. Detect drift with `terraform plan -refresh-only` in CI"
+    },
+    {
+      "name": "Local-First Testing",
+      "summary": "Run dependencies and emulated cloud locally so iteration is offline, fast, and cost-free before touching real cloud.",
+      "steps": "1. Run dependencies as Docker containers (Postgres, Redis) with named volumes\n2. Emulate cloud (AWS) locally with LocalStack at localhost:4566\n3. Gate dependents with healthchecks + depends_on: service_healthy\n4. Iterate offline; only apply to real cloud after local validation"
+    },
+    {
+      "name": "Progressive Delivery (blue-green / canary)",
+      "summary": "Reduce deploy risk by shifting traffic gradually and keeping an instant rollback path.",
+      "steps": "1. Deploy new version alongside old (blue-green) without cutting traffic\n2. Validate health, then flip router/selector to green\n3. Or shift a small % of traffic (canary) first\n4. Ramp as metrics stay healthy; instant rollback by re-flipping"
+    },
+    {
+      "name": "Immutable Infrastructure",
+      "summary": "Build fully-versioned artifacts once and deploy by replacement, making every version reproducible and rollback trivial.",
+      "steps": "1. Bake a fully-versioned image/artifact once\n2. Deploy by replacing instances, never mutating running ones\n3. Use create_before_destroy to avoid downtime\n4. Rollback = redeploy the prior image version"
+    }
+  ],
+  "sources": [
+    {
+      "kind": "docs",
+      "title": "Multi-stage builds",
+      "url": "https://docs.docker.com/build/building/multi-stage",
+      "tier": 3
+    },
+    {
+      "kind": "docs",
+      "title": "Control startup and shutdown order in Compose",
+      "url": "https://docs.docker.com/compose/how-tos/startup-order",
+      "tier": 3
+    },
+    {
+      "kind": "docs",
+      "title": "Docker volumes (persistent data)",
+      "url": "https://docs.docker.com/engine/storage/volumes/",
+      "tier": 3
+    },
+    {
+      "kind": "docs",
+      "title": "GitHub Actions Quickstart",
+      "url": "https://docs.github.com/en/actions/get-started/quickstart",
+      "tier": 3
+    },
+    {
+      "kind": "docs",
+      "title": "Terraform: Get Started - Docker",
+      "url": "https://developer.hashicorp.com/terraform/tutorials/docker-get-started",
+      "tier": 3
+    },
+    {
+      "kind": "docs",
+      "title": "The Twelve-Factor App",
+      "url": "https://12factor.net/",
+      "tier": 3
+    },
+    {
+      "kind": "docs",
+      "title": "Docker Desktop WSL 2 backend (Windows)",
+      "url": "https://docs.docker.com/desktop/features/wsl/",
+      "tier": 3
+    },
+    {
+      "kind": "github",
+      "title": "docker/awesome-compose",
+      "url": "https://github.com/docker/awesome-compose",
+      "tier": 1
+    },
+    {
+      "kind": "github",
+      "title": "prodrigestivill/docker-postgres-backup-local",
+      "url": "https://github.com/prodrigestivill/docker-postgres-backup-local",
+      "tier": 1
+    },
+    {
+      "kind": "github",
+      "title": "actions/starter-workflows",
+      "url": "https://github.com/actions/starter-workflows",
+      "tier": 1
+    },
+    {
+      "kind": "github",
+      "title": "aws-samples/localstack-terraform-test",
+      "url": "https://github.com/aws-samples/localstack-terraform-test",
+      "tier": 1
+    },
+    {
+      "kind": "reddit",
+      "title": "r/devops - 12factor app must-reads",
+      "url": "https://www.reddit.com/r/devops/comments/1i34812/any_must_read_suggestions_12factor_app_etc/",
+      "tier": 1
+    }
+  ]
+}

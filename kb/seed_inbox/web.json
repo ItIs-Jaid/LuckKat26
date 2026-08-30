@@ -1,0 +1,65 @@
+{
+  "domain": "web",
+  "sources": [
+    {"kind": "docs", "title": "React documentation (react.dev)", "url": "https://react.dev", "tier": 3},
+    {"kind": "docs", "title": "Next.js documentation", "url": "https://nextjs.org/docs", "tier": 3},
+    {"kind": "docs", "title": "Vite documentation", "url": "https://vite.dev", "tier": 3},
+    {"kind": "docs", "title": "TypeScript Handbook", "url": "https://www.typescriptlang.org/docs/handbook/intro.html", "tier": 3},
+    {"kind": "docs", "title": "Bun documentation", "url": "https://bun.com/docs", "tier": 3},
+    {"kind": "docs", "title": "Deno documentation", "url": "https://docs.deno.com", "tier": 3},
+    {"kind": "docs", "title": "Biome documentation", "url": "https://biomejs.dev", "tier": 3},
+    {"kind": "docs", "title": "Vitest documentation", "url": "https://vitest.dev", "tier": 3},
+    {"kind": "github", "title": "bulletproof-react: scalable production React architecture", "url": "https://github.com/alan2207/bulletproof-react", "tier": 1},
+    {"kind": "github", "title": "next-enterprise: enterprise-grade Next.js boilerplate", "url": "https://github.com/Blazity/next-enterprise", "tier": 1},
+    {"kind": "reddit", "title": "r/reactjs: React State Management in 2026 (server vs client state)", "url": "https://www.reddit.com/r/reactjs/comments/1syw5r8/react_state_management_in_2026_server_state_and/", "tier": 1},
+    {"kind": "reddit", "title": "r/typescript: TypeScript project structure discussion", "url": "https://www.reddit.com/r/typescript/comments/cx6i85/typescript_project_structure/", "tier": 1}
+  ],
+  "languages": [
+    {"name": "TypeScript", "version": "5.9", "role": "web frontend/backend", "notes": "Dominant deployed line in 2026; TS 6.0 released Mar 2026 (native Go port planned for 7.0). Enable strict mode; 5.x remains the safe, widely-supported target."},
+    {"name": "JavaScript", "version": "ES2024", "role": "web frontend/backend", "notes": "Runs on Node.js 24 (Active LTS), Deno 2.9, Bun 1.3. ESM is the standard module system; CJS/ESM interop improved in Node 22+."}
+  ],
+  "libraries": [
+    {"language": "JavaScript", "name": "node", "category": "runtime", "purpose": "Server-side JS/TS runtime; largest ecosystem and native module support.", "ecosystem": "npm", "version": "24"},
+    {"language": "TypeScript", "name": "deno", "category": "runtime", "purpose": "Secure-by-default TS-first runtime with built-in test/fmt/lint and JSR registry.", "ecosystem": "jsr", "version": "2.9"},
+    {"language": "JavaScript", "name": "bun", "category": "runtime", "purpose": "All-in-one runtime + bundler + package manager + test runner (JSCR).", "ecosystem": "npm", "version": "1.3"},
+    {"language": "TypeScript", "name": "typescript", "category": "compiler", "purpose": "Type checker and transpiler that adds static types to JavaScript.", "ecosystem": "npm", "version": "5.9"},
+    {"language": "TypeScript", "name": "react", "category": "ui-framework", "purpose": "Component library for building user interfaces; RSC + Server Actions stable in 19.", "ecosystem": "npm", "version": "19.2"},
+    {"language": "TypeScript", "name": "svelte", "category": "ui-framework", "purpose": "Compiler-based framework; runes ($state/$derived/$effect) give explicit reactivity.", "ecosystem": "npm", "version": "5"},
+    {"language": "TypeScript", "name": "next", "category": "meta-framework", "purpose": "Full-stack React framework with SSR, App Router, and edge middleware.", "ecosystem": "npm", "version": "16"},
+    {"language": "TypeScript", "name": "vite", "category": "bundler", "purpose": "Fast dev server and build tool; v8 uses Rolldown (Rust) for dev+prod.", "ecosystem": "npm", "version": "8"},
+    {"language": "JavaScript", "name": "esbuild", "category": "bundler", "purpose": "Extremely fast JS/CSS bundler and minifier (Go); used by Vite/Turbo.", "ecosystem": "npm", "version": "0.28"},
+    {"language": "TypeScript", "name": "biome", "category": "linter-formatter", "purpose": "Single Rust binary replacing ESLint + Prettier; type-aware rules in 2.x.", "ecosystem": "npm", "version": "2.5"},
+    {"language": "TypeScript", "name": "vitest", "category": "test-runner", "purpose": "Vite-native test runner (unit/integration/browser) reusing the app module graph.", "ecosystem": "npm", "version": "4.1"},
+    {"language": "JavaScript", "name": "swc", "category": "compiler", "purpose": "Rust-based TS/JS compiler, 20-70x faster than Babel; powers Next.js/Deno transforms.", "ecosystem": "npm", "version": "1.15"},
+    {"language": "JavaScript", "name": "eslint", "category": "linter", "purpose": "Pluggable linter; v10 uses flat config (eslint.config.js) only.", "ecosystem": "npm", "version": "10"},
+    {"language": "TypeScript", "name": "turbo", "category": "monorepo-orchestrator", "purpose": "Task runner with content-hash caching for JS/TS monorepos (2.x tasks schema).", "ecosystem": "npm", "version": "2"}
+  ],
+  "patterns": [
+    {"title": "Feature-based folder structure over type-based", "problem": "Grouping files by type (components/, hooks/, types/) scatters related code across many directories as features grow.", "solution": "Co-locate domain code inside feature folders (features/auth, features/payments) with a barrel index.ts; keep shared cross-cutting code (ui/, lib/) at top level. See bulletproof-react and matthewswong.com real-world structure.", "anti_pattern": "Flat type-based folders that force context-switching between six dirs for one feature.", "snippet": "// features/auth/index.ts\nexport { LoginForm } from './LoginForm';\nexport { useAuth } from './useAuth';"},
+    {"title": "Separate server state from client state", "problem": "Mixing remote/cacheable data with local UI state in one store causes stale-data bugs and broken back/forward behavior.", "solution": "Server state (cache, not state) via TanStack Query/SWR/Apollo; URL state via router params; client UI state via Zustand/Jotai/Context; form state via React Hook Form. Source: youngju.dev state-management guide and r/reactjs 2026 thread.", "anti_pattern": "Putting API-fetched data into Redux/global store and re-fetching manually."},
+    {"title": "React Server Components + Server Actions for data-heavy UI", "problem": "Client-side data fetching ships large bundles and creates request waterfalls.", "solution": "Use RSC (run only on server, zero client JS) and 'use server' Actions for mutations; pair with useActionState/useOptimistic. Source: react.dev/reference and Next.js docs.", "anti_pattern": "Fetching everything in useEffect on the client when the data lives server-side."},
+    {"title": "Monorepo with pnpm workspaces + Turborepo", "problem": "Version drift and duplicated tooling across multiple apps/packages.", "solution": "pnpm workspaces + turbo.json task graph (dependsOn ^build, outputs, remote cache). Extract shared code to internal packages only when a real sharing need exists. Source: vercel/turborepo best-practices.", "anti_pattern": "Splitting into many microrepos prematurely, or nested wildcards like packages/**.", "snippet": "// turbo.json\ntasks: { build: { dependsOn: [\"^build\"], outputs: [\"dist/**\", \".next/**\"] } }"},
+    {"title": "Strict TypeScript + type-aware linting", "problem": "Untyped or loosely-typed code ships runtime bugs that the compiler could catch.", "solution": "Enable strict mode in tsconfig and apply typescript-eslint recommended + recommended-requiring-type-checking; Biome 2.x adds type-aware rules. Source: r/typescript good-practices thread.", "anti_pattern": "Pervasive `any` and disabled strict flags to silence errors."},
+    {"title": "Compile-time reactivity with Svelte runes", "problem": "Runtime reactivity systems add overhead and implicit mental models.", "solution": "Svelte 5 runes: $state for mutable reactive values, $derived for computed, $effect for side effects. Source: svelte.dev/docs.", "anti_pattern": "Manual subscribe/unsubscribe or re-implementing reactivity with hooks."},
+    {"title": "Push logic to the edge boundary", "problem": "Centralized servers add latency for global users.", "solution": "Deploy edge functions / middleware (Deno Deploy, Bun, Next.js edge, Cloudflare) for low-latency, geographically-close compute; keep heavy work in origin services.", "anti_pattern": "A single heavy monolith handling all traffic regardless of user location."},
+    {"title": "End-to-end type safety with Zod + tRPC", "problem": "API contracts drift between client and server, producing runtime mismatches.", "solution": "Define schemas once with Zod; derive types and expose procedures via tRPC so the client call is fully typed. Source: t3-oss/create-t3-app (T3 Stack).", "anti_pattern": "Hand-written fetch clients and duplicated, drift-prone DTO types per side."}
+  ],
+  "tutorials": [
+    {"title": "React Learn (official)", "url": "https://react.dev/learn", "level": "beginner", "summary": "Official interactive React tutorial covering components, props, state, and hooks."},
+    {"title": "Next.js Learn (official)", "url": "https://nextjs.org/learn", "level": "intermediate", "summary": "Build a full app with the App Router, data fetching, and deployment."},
+    {"title": "Vite Guide", "url": "https://vite.dev/guide/", "level": "beginner", "summary": "Scaffold and configure a Vite project; understand dev server and build."},
+    {"title": "TypeScript Handbook", "url": "https://www.typescriptlang.org/docs/handbook/intro.html", "level": "beginner", "summary": "Core type system, generics, and everyday TS patterns."},
+    {"title": "Bun Documentation", "url": "https://bun.com/docs", "level": "beginner", "summary": "Runtime, bundler, test runner, and package manager in one binary."},
+    {"title": "Deno Documentation", "url": "https://docs.deno.com", "level": "beginner", "summary": "Permission model, built-in toolchain, and JSR usage."},
+    {"title": "Svelte Tutorial", "url": "https://svelte.dev/docs", "level": "beginner", "summary": "Svelte 5 runes, components, and reactivity model."},
+    {"title": "Vitest Guide", "url": "https://vitest.dev/guide/", "level": "intermediate", "summary": "Vite-native unit/integration/browser testing with the same transforms as the app."}
+  ],
+  "methodologies": [
+    {"name": "Bulletproof React architecture", "summary": "Opinionated, scalable structure for production React apps with clean boundaries and consistent conventions.", "steps": "Start from Vite React TS scaffold\nGroup code by feature with barrel index.ts\nBuild a thin API layer (services/) separate from UI\nManage state by category (server vs client vs form)\nAdd Vitest + Testing Library and error/security boundaries\nApply strict TS and ESLint/Biome (see github.com/alan2207/bulletproof-react)"},
+    {"name": "T3 Stack (typesafe full-stack)", "summary": "Modular, full-stack typesafe stack: Next.js + TypeScript + tRPC + Prisma/Drizzle + NextAuth + Tailwind.", "steps": "Scaffold with create-t3-app\nDefine DB schema (Prisma/Drizzle)\nExpose procedures via tRPC routers\nDerive client types end-to-end (no hand-written DTOs)\nAdd Zod validation at boundaries\nBleed responsibly: keep risky tech in low-risk places"},
+    {"name": "Turborepo monorepo", "summary": "Fast JS/TS monorepo via pnpm workspaces and content-hash cached task orchestration.", "steps": "pnpm-workspace.yaml with apps/* and packages/*\nRoot scripts delegate to 'turbo run <task>'\nDefine turbo.json tasks (dependsOn ^build, outputs)\nAdd shared @repo/* config packages (tsconfig, eslint)\nEnable remote cache for CI/team\nUse --filter to target packages"},
+    {"name": "Strict TypeScript project setup", "summary": "Maximize compile-time safety and editor assistance from day one.", "steps": "Set strict: true in tsconfig\nEnable noUncheckedIndexedAccess and verbatimModuleSyntax\nApply typescript-eslint recommended + type-checking rules\nAdd Biome for format+lint in one pass\nUse Zod for runtime validation at boundaries"},
+    {"name": "Biome-only lint + format pipeline", "summary": "Replace ESLint + Prettier with a single Rust binary and one config file.", "steps": "Install @biomejs/biome\nAuthor biome.json (formatter + linter + assists)\nRun 'biome check' and 'biome check --write'\nMigrate existing ESLint via 'biome migrate eslint'\nWire into pre-commit and CI"},
+    {"name": "Feature-first testing with Vitest", "summary": "Test against the same Vite module graph the app uses, no second toolchain.", "steps": "Install vitest (matches vite version)\nAdd test block to vite.config.ts (environment jsdom)\nCo-locate *.test.ts beside feature code\nUse @testing-library/react for components\nGenerate v8 coverage; run in CI"}
+  ]
+}

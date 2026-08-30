@@ -1,0 +1,9 @@
+# Local-only governance + live data — never published to the public repo.
+561.md
+kb/kb.db
+kb/export/
+
+# Generic ignores
+__pycache__/
+*.pyc
+.env

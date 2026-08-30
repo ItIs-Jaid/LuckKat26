@@ -1,0 +1,323 @@
+{
+  "domain": "security",
+  "sources": [
+    {
+      "kind": "docs",
+      "title": "OWASP Top 10:2021",
+      "url": "https://owasp.org/Top10/2021",
+      "tier": 3
+    },
+    {
+      "kind": "docs",
+      "title": "CWE - Common Weakness Enumeration (List)",
+      "url": "https://cwe.mitre.org/data",
+      "tier": 3
+    },
+    {
+      "kind": "advisory",
+      "title": "CWE Top 25 Most Dangerous Software Weaknesses (2024)",
+      "url": "https://cwe.mitre.org/top25/archive/2024/2024.html",
+      "tier": 3
+    },
+    {
+      "kind": "docs",
+      "title": "OWASP ASVS (Application Security Verification Standard)",
+      "url": "https://cheatsheetseries.owasp.org/IndexASVS.html",
+      "tier": 3
+    },
+    {
+      "kind": "docs",
+      "title": "OWASP Cheat Sheet Series",
+      "url": "https://cheatsheetseries.owasp.org/index.html",
+      "tier": 3
+    },
+    {
+      "kind": "docs",
+      "title": "OWASP Top 10 Proactive Controls",
+      "url": "https://top10proactive.owasp.org/",
+      "tier": 3
+    },
+    {
+      "kind": "github",
+      "title": "Bandit - Python security linter (PyCQA)",
+      "url": "https://github.com/PyCQA/bandit",
+      "tier": 2
+    },
+    {
+      "kind": "github",
+      "title": "Semgrep - fast open-source SAST",
+      "url": "https://github.com/semgrep/semgrep",
+      "tier": 2
+    },
+    {
+      "kind": "github",
+      "title": "Gitleaks - secrets detection",
+      "url": "https://github.com/gitleaks/gitleaks",
+      "tier": 2
+    },
+    {
+      "kind": "github",
+      "title": "Trivy - comprehensive security scanner (Aqua)",
+      "url": "https://github.com/aquasecurity/trivy",
+      "tier": 2
+    },
+    {
+      "kind": "reddit",
+      "title": "r/cybersecurity: how do you securely manage API keys and secrets",
+      "url": "https://www.reddit.com/r/cybersecurity/comments/1mz2duc/how_do_you_securely_manage_api_keys_and_secrets",
+      "tier": 1
+    },
+    {
+      "kind": "reddit",
+      "title": "r/programming: best practices for managing & storing secrets (detect-secrets/Yelp)",
+      "url": "https://www.reddit.com/r/programming/comments/h7kmff/best_practices_for_managing_storing_secrets_like/",
+      "tier": 1
+    }
+  ],
+  "languages": [
+    {
+      "name": "AppSec",
+      "version": "",
+      "role": "secure development",
+      "notes": "OWASP Top 10 / ASVS / CWE-aligned secure SDLC"
+    },
+    {
+      "name": "Python",
+      "version": "3.13",
+      "role": "SAST target",
+      "notes": "bandit (AST) + semgrep + detect-secrets supported"
+    }
+  ],
+  "libraries": [
+    {
+      "language": "Python",
+      "name": "bandit",
+      "category": "sast",
+      "purpose": "Security linter that finds common security issues in Python via AST plugin checks: hardcoded passwords, eval/exec, weak hashes (MD5/SHA1), disabled TLS verification, SQL built by string concatenation. Use as a cheap first-pass CI gate, not a substitute for taint-tracking SAST.",
+      "ecosystem": "pip",
+      "version": "1.9.4"
+    },
+    {
+      "language": "Multi",
+      "name": "semgrep",
+      "category": "sast",
+      "purpose": "Fast semantic 'grep for code' SAST across 30+ languages using pattern/taint rules that look like the code; runs in IDE, pre-commit, and CI. CE is local-first (code not uploaded by default, intra-file); cross-file/dataflow needs AppSec Platform.",
+      "ecosystem": "pip",
+      "version": "1.173.0"
+    },
+    {
+      "language": "Go/Binary",
+      "name": "gitleaks",
+      "category": "secrets",
+      "purpose": "Detect hardcoded secrets (API keys, tokens, passwords) in git repos, files, and stdin via regex + entropy; deploy as pre-commit hook and CI gate with SARIF output. Feature-complete; maintainer shifting focus to Betterleaks.",
+      "ecosystem": "go",
+      "version": "8.30.1"
+    },
+    {
+      "language": "Go/Binary",
+      "name": "trivy",
+      "category": "sca",
+      "purpose": "Comprehensive scanner for vulnerabilities (CVEs) in OS packages, app dependencies, container images, IaC misconfig, secrets, and SBOM (CycloneDX/SPDX). Self-hostable; covers multi-ecosystem dependency scanning.",
+      "ecosystem": "go",
+      "version": "0.73.0"
+    },
+    {
+      "language": "Java",
+      "name": "dependency-check",
+      "category": "sca",
+      "purpose": "OWASP SCA utility that detects known, publicly disclosed vulnerabilities in dependencies via CPE fuzzy matching against NVD; needs an NVD API key for reasonable update speed. Maven/Gradle/CLI.",
+      "ecosystem": "maven",
+      "version": "12.2.2"
+    },
+    {
+      "language": "Python",
+      "name": "detect-secrets",
+      "category": "secrets",
+      "purpose": "Yelp's tool to detect and prevent committing secrets; uses a baseline of known secrets so only new leaks fail, integrates with pre-commit and pre-receive hooks. Pairs with gitleaks.",
+      "ecosystem": "pip",
+      "version": "1.5.0"
+    },
+    {
+      "language": "Python",
+      "name": "cryptography",
+      "category": "crypto",
+      "purpose": "PyCA's high-level wrapper around OpenSSL providing safe primitives (Fernet, AES-GCM, RSA, ECC, SHA-3). Prefer over hand-rolled crypto; use AEAD and avoid MD5/SHA1 for security.",
+      "ecosystem": "pip",
+      "version": "50.0.1"
+    },
+    {
+      "language": "Python",
+      "name": "pynacl",
+      "category": "crypto",
+      "purpose": "Python binding to libsodium; misuse-resistant high-level boxes: SecretBox (symmetric), Box/SealedBox (public-key, Curve25519), SigningKey (Ed25519), pwhash (Argon2id). Use for app-level crypto instead of assembling primitives.",
+      "ecosystem": "pip",
+      "version": "1.6.2"
+    },
+    {
+      "language": "C",
+      "name": "libsodium",
+      "category": "crypto",
+      "purpose": "Modern, portable, misuse-resistant crypto library (NaCl fork): crypto_secretbox, crypto_box, crypto_sign, crypto_pwhash (Argon2id), crypto_kdf. Opinionated safe defaults; call sodium_init() once. Not for TLS (use OpenSSL/BoringSSL).",
+      "ecosystem": "system",
+      "version": "1.0.22"
+    },
+    {
+      "language": "Multi",
+      "name": "vault",
+      "category": "secrets",
+      "purpose": "HashiCorp Vault: centralized secrets management with dynamic, short-lived, leased credentials; encryption-as-a-service, rotation, and fine-grained access policies. Inject at runtime, never in source or client bundles.",
+      "ecosystem": "binary",
+      "version": "2.0.4"
+    },
+    {
+      "language": "Multi",
+      "name": "codeql",
+      "category": "sast",
+      "purpose": "GitHub's query-based semantic code analysis (QL) for data-flow/taint analysis across many languages; powers GitHub code scanning. Free for open-source/research; commercial license needed for closed-source CI. Strong for source-sink reasoning.",
+      "ecosystem": "binary",
+      "version": "2.25.4"
+    }
+  ],
+  "patterns": [
+    {
+      "title": "Least-privilege credentials & runtime injection",
+      "problem": "Hardcoded admin keys in repos/client bundles; over-broad OAuth/API scopes; secrets in .env committed to git (A02/A05).",
+      "solution": "Centralize secrets in a manager (Vault/AWS Secrets Manager/Key Vault); inject at runtime; use OIDC federation with short-lived tokens in CI/CD; scope tokens per feature; rotate with staging labels.",
+      "anti_pattern": "Embedding API keys in source or frontend bundles; using one long-lived admin token for everything.",
+      "snippet": "# CI: exchange OIDC for short-lived token, never store cloud keys\n# export $(vault read -field=token secret/ci/role)"
+    },
+    {
+      "title": "Parameterized queries & strict input validation",
+      "problem": "String-concatenated SQL, shell, OS commands, and HTML allow injection (CWE-89, CWE-78, CWE-79).",
+      "solution": "Use parameterized/prepared statements and ORM query builders; allowlist input validation; output-encode per context; never build queries by concatenation.",
+      "anti_pattern": "cursor.execute('SELECT * FROM u WHERE id=' + user_id) or subprocess(shell=True) with user input.",
+      "snippet": "cursor.execute('SELECT * FROM users WHERE id = %s', (user_id,))"
+    },
+    {
+      "title": "Continuous dependency vulnerability scanning (SCA)",
+      "problem": "Transitive dependencies with known CVEs ship to production (A06:2021 Vulnerable and Outdated Components).",
+      "solution": "Run ecosystem-native audits (pip-audit, npm audit) plus Trivy/Dependency-Check/OSV-Scanner in CI on every PR; fail on HIGH/CRITICAL; enable Dependabot/Renovate for fix PRs.",
+      "anti_pattern": "Manual, occasional checks; ignoring transitive deps; pinning without monitoring advisories.",
+      "snippet": "trivy fs --severity HIGH,CRITICAL --exit-code 1 ."
+    },
+    {
+      "title": "Use AEAD & misuse-resistant crypto libraries",
+      "problem": "Hand-rolled crypto, ECB mode, MD5/SHA1, hardcoded keys, and nonce reuse leak plaintext or weaken integrity.",
+      "solution": "Use libsodium/PyNaCl or the cryptography lib with AEAD (AES-GCM, ChaCha20-Poly1305); Argon2id for password hashing; generate random 32-byte keys; never reuse a nonce with the same key.",
+      "anti_pattern": "DES/3DES, MD5 password hashes, AES in ECB mode, reusing IVs/nonces.",
+      "snippet": "from cryptography.fernet import Fernet\ntoken = Fernet(key).encrypt(data)"
+    },
+    {
+      "title": "Pre-commit + CI secrets gate with baseline",
+      "problem": "Secrets committed to git persist in history and are scraped by attackers.",
+      "solution": "Run gitleaks/detect-secrets as pre-commit and CI; maintain a baseline so only NEW secrets fail; on leak, rotate immediately and purge history with git filter-repo.",
+      "anti_pattern": "Relying on code review alone; using SKIP=gitleaks to bypass; deleting only from HEAD.",
+      "snippet": "gitleaks git --pre-commit --staged   # or detect-secrets pre-commit hook"
+    },
+    {
+      "title": "Shift-left security & threat modeling",
+      "problem": "'We'll add security later' leads to baked-in hardcoding, disabled TLS validation, and misconfig (per r/AskNetsec dev-culture threads).",
+      "solution": "Bake OWASP Proactive Controls into the SDLC; threat-model in design; add SAST/SCA gates in CI from day one; treat dev/test like prod.",
+      "anti_pattern": "Deferring all security to a post-launch 'security sprint'; disabling TLS validation by default.",
+      "snippet": ""
+    },
+    {
+      "title": "Least privilege & explicit authorization (A01)",
+      "problem": "Missing/incorrect authorization (CWE-862/863), IDOR, and over-privileged services (A01:2021 Broken Access Control).",
+      "solution": "Deny-by-default authorization at every operation; verify object ownership server-side; scope service identities; apply OWASP ASVS V4/V8.",
+      "anti_pattern": "Trusting client-supplied role/tenant IDs; checking authz only at the UI layer.",
+      "snippet": ""
+    },
+    {
+      "title": "Security logging & monitoring (A09)",
+      "problem": "Insufficient logging/monitoring lets breaches go undetected; logs can leak secrets/PII.",
+      "solution": "Log authn/authz decisions, redact tokens/PII, centralize with alerting and tamper-protection; meet OWASP ASVS V7.",
+      "anti_pattern": "Logging full request bodies with credentials; no alerting on repeated 401/403.",
+      "snippet": ""
+    },
+    {
+      "title": "SSRF protection for outbound requests (A10)",
+      "problem": "Server-side request forgery lets attackers reach internal services via user-supplied URLs.",
+      "solution": "Allowlist destinations; block link-local/metadata (169.254.169.254); validate then re-resolve; disable unused URL schemes.",
+      "anti_pattern": "Fetching arbitrary user URLs with server credentials attached.",
+      "snippet": ""
+    }
+  ],
+  "tutorials": [
+    {
+      "title": "OWASP Top 10:2021",
+      "url": "https://owasp.org/Top10/2021",
+      "level": "beginner",
+      "summary": "The canonical web app risk ranking (A01 Broken Access Control ... A10 SSRF) with CWE mappings — baseline AppSec literacy."
+    },
+    {
+      "title": "OWASP Cheat Sheet Series",
+      "url": "https://cheatsheetseries.owasp.org/index.html",
+      "level": "intermediate",
+      "summary": "120+ implementation-focused sheets: injection prevention, password storage, secrets management, input validation."
+    },
+    {
+      "title": "OWASP ASVS",
+      "url": "https://cheatsheetseries.owasp.org/IndexASVS.html",
+      "level": "advanced",
+      "summary": "Verifiable security requirements across 17 chapters (auth, crypto, access control, API) in 3 assurance levels."
+    },
+    {
+      "title": "Semgrep Getting Started",
+      "url": "https://semgrep.dev/docs/getting-started/",
+      "level": "intermediate",
+      "summary": "Install, write pattern/taint rules, run in CI/pre-commit; local-first scanning across 30+ languages."
+    },
+    {
+      "title": "Bandit documentation",
+      "url": "https://bandit.readthedocs.io/en/latest/",
+      "level": "intermediate",
+      "summary": "Configure and run Bandit as a Python SAST gate; baseline mode to only fail on new findings."
+    },
+    {
+      "title": "Gitleaks documentation",
+      "url": "https://github.com/gitleaks/gitleaks#readme",
+      "level": "beginner",
+      "summary": "Detect secrets via regex+entropy in repos/files; pre-commit and CI usage; .gitleaks.toml config."
+    },
+    {
+      "title": "Trivy docs",
+      "url": "https://trivy.dev/latest/docs/",
+      "level": "intermediate",
+      "summary": "Scan filesystem, images, IaC, and generate SBOM; CI integration with --exit-code 1 on HIGH/CRITICAL."
+    },
+    {
+      "title": "CWE Top 25 (2024)",
+      "url": "https://cwe.mitre.org/top25/archive/2024/2024.html",
+      "level": "intermediate",
+      "summary": "The 25 most dangerous software weaknesses — a prioritization list for secure design and testing."
+    }
+  ],
+  "methodologies": [
+    {
+      "name": "OWASP Top 10 Proactive Controls",
+      "summary": "OWASP's prioritized list of the top 10 controls every developer should implement (C1-C10): parameterize queries, encode/escape, validate, authn/authz, crypto, error handling, logging, data protection, security config, SCA.",
+      "steps": "C1 Define security requirements\nC2 Leverage security frameworks & libraries\nC3 Secure database access (parameterize)\nC4 Encode/escape input\nC5 Validate input\nC6 Implement digital identity\nC7 Enforce access controls\nC8 Protect data everywhere\nC9 Implement security logging/monitoring\nC10 Handle all errors/exceptions securely"
+    },
+    {
+      "name": "Secure SDLC / Shift-Left",
+      "summary": "Integrate security into every phase: threat model in design, SAST+SCA+secret scans in CI, secure code review, and DAST before release.",
+      "steps": "1. Requirements: map OWASP ASVS / legal\n2. Design: threat model (STRIDE / abuse cases)\n3. Build: SAST (bandit/semgrep) + secret scan (gitleaks) pre-commit/CI\n4. Dependencies: SCA (Trivy/Dependency-Check) per PR\n5. Test: secure code review + DAST\n6. Release/Operate: logging, monitoring, patch cadence"
+    },
+    {
+      "name": "Threat Modeling (STRIDE)",
+      "summary": "Structured identification of threats per component: Spoofing, Tampering, Repudiation, Information disclosure, Denial of service, Elevation of privilege.",
+      "steps": "1. Diagram system / data flows (DFD)\n2. Decompose using STRIDE per element\n3. Identify threats and root causes\n4. Rate risk (likelihood x impact)\n5. Define mitigations mapped to CWE/ASVS\n6. Validate and track to closure"
+    },
+    {
+      "name": "Secrets Management Lifecycle",
+      "summary": "Centralize, inject at runtime, shorten TTL, and audit. Pair detect-prevent (pre-commit/CI) with rotation and history purge on leak.",
+      "steps": "1. Inventory all secrets & where used\n2. Move to a manager (Vault/AWS SM/Key Vault)\n3. Inject at runtime; OIDC short-lived tokens in CI\n4. Least-privilege scopes per feature\n5. Automated rotation with staging labels\n6. On leak: rotate + git filter-repo purge + alert"
+    },
+    {
+      "name": "OWASP SAMM (DevSecOps Maturity)",
+      "summary": "Software Assurance Maturity Model: measure and roadmap secure-development maturity across governance, design, implementation, verification, operations.",
+      "steps": "1. Assess current maturity per SAMM stream\n2. Set target levels with stakeholders\n3. Implement pipeline gates (SAST/SCA/secret scan)\n4. Train devs on Proactive Controls\n5. Measure progress; iterate roadmap\n6. Independent verification (ASVS level)"
+    }
+  ]
+}

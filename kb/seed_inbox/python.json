@@ -1,0 +1,361 @@
+{
+  "domain": "python",
+  "sources": [
+    {
+      "kind": "github",
+      "title": "fastapi/fastapi",
+      "url": "https://github.com/fastapi/fastapi",
+      "tier": 3
+    },
+    {
+      "kind": "github",
+      "title": "pydantic/pydantic",
+      "url": "https://github.com/pydantic/pydantic",
+      "tier": 3
+    },
+    {
+      "kind": "github",
+      "title": "tiangolo/full-stack-fastapi-template",
+      "url": "https://github.com/tiangolo/full-stack-fastapi-template",
+      "tier": 3
+    },
+    {
+      "kind": "docs",
+      "title": "Python 3 Documentation",
+      "url": "https://docs.python.org/3/",
+      "tier": 3
+    },
+    {
+      "kind": "docs",
+      "title": "FastAPI Documentation",
+      "url": "https://fastapi.tiangolo.com/",
+      "tier": 3
+    },
+    {
+      "kind": "docs",
+      "title": "Pydantic Documentation",
+      "url": "https://docs.pydantic.dev/latest/",
+      "tier": 3
+    },
+    {
+      "kind": "docs",
+      "title": "pytest Documentation",
+      "url": "https://docs.pytest.org/en/stable/",
+      "tier": 3
+    },
+    {
+      "kind": "docs",
+      "title": "Django Documentation",
+      "url": "https://docs.djangoproject.com/",
+      "tier": 3
+    },
+    {
+      "kind": "docs",
+      "title": "pandas Documentation",
+      "url": "https://pandas.pydata.org/docs/",
+      "tier": 3
+    },
+    {
+      "kind": "docs",
+      "title": "uv Documentation",
+      "url": "https://docs.astral.sh/uv/",
+      "tier": 3
+    },
+    {
+      "kind": "reddit",
+      "title": "r/Python: Structure Large Python Projects for Maintainability",
+      "url": "https://www.reddit.com/r/Python/comments/1pccbk4/structure_large_python_projects_for/",
+      "tier": 1
+    },
+    {
+      "kind": "blog",
+      "title": "Modern Python Tooling in 2026 - uv, Ruff, ty",
+      "url": "https://blog.rajpoot.dev/posts/python/modern-python-tooling-uv-ruff-2026",
+      "tier": 2
+    }
+  ],
+  "languages": [
+    {
+      "name": "Python",
+      "version": "3.13",
+      "role": "agent automation / data / web",
+      "notes": "3.13 is the safe, broadly-supported stable (bugfix through 2029, free-threaded mode experimental via PEP 703, basic JIT via PEP 744). 3.14.5 is the latest stable (released 2026-05-10). Prefer 3.13 for widest library/agent-tool compatibility; use 3.14 only after validating the full dependency stack."
+    }
+  ],
+  "libraries": [
+    {
+      "language": "Python",
+      "name": "fastapi",
+      "category": "web-framework",
+      "version": "0.136",
+      "purpose": "ASGI web framework for building typed APIs from Python type hints; auto OpenAPI docs, dependency injection, on par with Node/Go for I/O-bound APIs. Stands on Starlette + Pydantic.",
+      "ecosystem": "pip"
+    },
+    {
+      "language": "Python",
+      "name": "django",
+      "category": "web-framework",
+      "version": "6.1",
+      "purpose": "Batteries-included full-stack framework (ORM, admin, auth, CSRF, templates). 6.1 adds async ORM field fetch modes; native async ORM methods aget/acreate/aupdate since 6.0.",
+      "ecosystem": "pip"
+    },
+    {
+      "language": "Python",
+      "name": "flask",
+      "category": "web-framework",
+      "version": "3.1",
+      "purpose": "Minimal WSGI microframework for small services/JSON APIs. WSGI-only by design; async def views run in a worker thread via asgiref, not a real event loop.",
+      "ecosystem": "pip"
+    },
+    {
+      "language": "Python",
+      "name": "pydantic",
+      "category": "validation-serialization",
+      "version": "2.13",
+      "purpose": "Type-hint-driven data validation and serialization (Rust-backed pydantic-core). Powers FastAPI, LangChain, OpenAI Agents SDK, Pydantic AI. model_validate / model_dump API.",
+      "ecosystem": "pip"
+    },
+    {
+      "language": "Python",
+      "name": "sqlalchemy",
+      "category": "orm-database",
+      "version": "2.0",
+      "purpose": "SQL toolkit and ORM with first-class async engine (create_async_engine, AsyncSession). Use with asyncpg for Postgres in async services.",
+      "ecosystem": "pip"
+    },
+    {
+      "language": "Python",
+      "name": "pandas",
+      "category": "data-analysis",
+      "version": "3.0",
+      "purpose": "Tabular data analysis/manipulation. 3.0 (Jan 2026) enforces Copy-on-Write, makes PyArrow string dtype default, requires Python 3.11+, adds zero-copy Arrow interchange.",
+      "ecosystem": "pip"
+    },
+    {
+      "language": "Python",
+      "name": "numpy",
+      "category": "numerical",
+      "version": "2.1",
+      "purpose": "N-dimensional arrays and vectorized math; the numerical backend for pandas, scikit-learn, PyTorch stacks. 2.x is a C-API-breaking modern baseline.",
+      "ecosystem": "pip"
+    },
+    {
+      "language": "Python",
+      "name": "httpx",
+      "category": "http-client",
+      "version": "0.28",
+      "purpose": "Modern HTTP client with sync Client + async AsyncClient, HTTP/2, default timeouts, full typing; the standard in-process test client for FastAPI/Starlette (calls ASGI apps directly).",
+      "ecosystem": "pip"
+    },
+    {
+      "language": "Python",
+      "name": "aiohttp",
+      "category": "async-http-server",
+      "version": "3.14",
+      "purpose": "Async HTTP client AND server built on asyncio; highest throughput for high-concurrency request storms. Pair with aiohttp-socks for SOCKS proxies.",
+      "ecosystem": "pip"
+    },
+    {
+      "language": "Python",
+      "name": "requests",
+      "category": "http-client",
+      "version": "2.32",
+      "purpose": "The classic synchronous/blocking HTTP client. Still ubiquitous for simple scripts; prefer httpx for new async or typed code.",
+      "ecosystem": "pip"
+    },
+    {
+      "language": "Python",
+      "name": "pytest",
+      "category": "testing",
+      "version": "9.1",
+      "purpose": "Fixture-based test framework. 9.x removes 8.x deprecations, adds subtests, native [tool.pytest] TOML config. Pair with pytest-asyncio/anyio for async tests.",
+      "ecosystem": "pip"
+    },
+    {
+      "language": "Python",
+      "name": "uv",
+      "category": "packaging-tooling",
+      "version": "0.12",
+      "purpose": "Rust-powered single binary replacing pip/venv/poetry/pyenv; 10-100x faster. uv python install, uv init, uv add, uv sync, uv.lock cross-platform lockfile. Astral (acquired by OpenAI Mar 2026).",
+      "ecosystem": "pip/uv"
+    },
+    {
+      "language": "Python",
+      "name": "ruff",
+      "category": "linting-formatting",
+      "version": "0.16",
+      "purpose": "Single ultra-fast linter+formatter (replaces flake8/black/isort/pyupgrade/bandit-partial). Config in [tool.ruff]; `ruff check --fix`, `ruff format`.",
+      "ecosystem": "pip"
+    },
+    {
+      "language": "Python",
+      "name": "typer",
+      "category": "cli-framework",
+      "version": "0.17",
+      "purpose": "FastAPI's little sibling for CLIs: build terminal apps from type hints. Ideal for agent/automation entrypoints and ops tooling.",
+      "ecosystem": "pip"
+    },
+    {
+      "language": "Python",
+      "name": "pydantic-ai",
+      "category": "agent-framework",
+      "version": "1.0",
+      "purpose": "Type-safe agent framework from the Pydantic team (Apache 2.0). V1 API-stable since Sept 2025; structured outputs, tool calls, multi-model. Good for local-first agent automation.",
+      "ecosystem": "pip"
+    }
+  ],
+  "patterns": [
+    {
+      "title": "Async I/O for concurrent HTTP calls",
+      "problem": "Sequential blocking HTTP calls make I/O-bound agents/services slow and tie up the event loop.",
+      "solution": "Use `async def` handlers and a single reused httpx.AsyncClient; gather concurrent calls with asyncio.gather.",
+      "anti_pattern": "Creating a new client per request or calling sync requests.get inside an async handler (blocks the loop).",
+      "snippet": "async with httpx.AsyncClient() as c:\n    res = await asyncio.gather(c.get(u) for u in urls)"
+    },
+    {
+      "title": "Pydantic models for request/response contracts",
+      "problem": "Untyped dicts let malformed input reach business logic and produce unclear 500s.",
+      "solution": "Declare request bodies/responses as pydantic BaseModel and set response_model; FastAPI returns 422 on invalid input.",
+      "anti_pattern": "Accepting raw dict and hand-validating with if/raise inside the route.",
+      "snippet": "class Item(BaseModel):\n    name: str\n    price: float\n@app.post('/items', response_model=Item)\ndef create(item: Item): ..."
+    },
+    {
+      "title": "Dependency injection for shared resources",
+      "problem": "Module-level global DB connections/auth state cause coupling and test friction.",
+      "solution": "Provide resources via Depends(get_db) / Depends(get_current_user); FastAPI resolves the graph per request with caching.",
+      "anti_pattern": "A module-global engine/session imported directly by handlers.",
+      "snippet": "def get_db() -> Iterator[Session]:\n    with Session(engine) as s: yield s\n@app.get('/x')\ndef x(db: Session = Depends(get_db)): ..."
+    },
+    {
+      "title": "Dependency overrides for fast, isolated tests",
+      "problem": "Tests hit the real database or external network, becoming slow and flaky.",
+      "solution": "Override dependencies in tests: app.dependency_overrides[get_db] = lambda: fake_db; use ASGITransport for in-process HTTP.",
+      "anti_pattern": "Importing and monkeypatching internals ad hoc, or running a real server on a port in unit tests.",
+      "snippet": "app.dependency_overrides[get_db] = lambda: fake_session\nasync with AsyncClient(transport=ASGITransport(app=app)) as c: ..."
+    },
+    {
+      "title": "src/ layout with a separate tests/ folder",
+      "problem": "Flat scripts and tests-inside-source cause circular imports, packaging bloat, and merge conflicts.",
+      "solution": "Root-level src/<package>/ plus a sibling tests/ that mirrors the source structure (per Python Packaging User Guide).",
+      "anti_pattern": "Scattering .py files at repo root or putting tests inside the importable package.",
+      "snippet": "# repo/\n#   src/mypkg/\n#   tests/  (mirrors src layout)"
+    },
+    {
+      "title": "Gradual typing + CI type checking",
+      "problem": "Untyped code ships runtime TypeErrors that tests miss and refactoring breaks silently.",
+      "solution": "Annotate signatures/returns and run mypy/pyright/ty in CI; required by FastAPI models anyway.",
+      "anti_pattern": "Spraying `Any` everywhere or disabling the type checker to silence errors.",
+      "snippet": "# pyproject.toml [tool.pytest] + `uv run ty check` in CI"
+    },
+    {
+      "title": "Reproducible environments with venv + lockfile",
+      "problem": "Unpinned `pip install` causes dependency drift and 'works on my machine' failures.",
+      "solution": "Isolate in a venv (or uv) and commit a lockfile (uv.lock / poetry.lock) with exact resolved versions.",
+      "anti_pattern": "Installing packages globally or committing only unpinned requirements.txt.",
+      "snippet": "uv sync   # installs exact versions from uv.lock"
+    },
+    {
+      "title": "Context managers for resource safety",
+      "problem": "Manually opened files/sessions/connections leak handles and locks.",
+      "solution": "Use `with`/`async with` for files, sessions, and clients so cleanup is guaranteed.",
+      "anti_pattern": "file = open(...) then forgetting close(), or relying on GC.",
+      "snippet": "async with AsyncSession(engine) as s:\n    rows = await s.execute(select(User))"
+    },
+    {
+      "title": "Pandas Copy-on-Write / explicit copies",
+      "problem": "Chained assignment on a view silently mutates the parent DataFrame in surprising places.",
+      "solution": "On pandas 3.0 CoW is default (subset mutations get a lazy copy). For older versions set mode.copy_on_write=True and use .copy() explicitly.",
+      "anti_pattern": "df[mask]['col'] = val  (chained assignment on a possibly-view).",
+      "snippet": "subset = df.iloc[1:3].copy()  # own the data before mutating"
+    },
+    {
+      "title": "pytest fixtures over duplicated setup",
+      "problem": "Each test repeats setup/teardown, drifting and hiding intent.",
+      "solution": "Declare fixtures (client, db_session, auth) with scope and yield; depend on them by argument.",
+      "anti_pattern": "Copy-pasting connect/insert/cleanup boilerplate into every test function.",
+      "snippet": "@pytest.fixture\ndef client(db):\n    app.dependency_overrides[get_db] = lambda: db\n    yield TestClient(app)"
+    }
+  ],
+  "tutorials": [
+    {
+      "title": "The Python Tutorial (official)",
+      "url": "https://docs.python.org/3/tutorial/",
+      "level": "beginner",
+      "summary": "Official, authoritative intro to the language: data structures, modules, classes, iterators, and the stdlib."
+    },
+    {
+      "title": "FastAPI - Tutorial",
+      "url": "https://fastapi.tiangolo.com/tutorial/",
+      "level": "intermediate",
+      "summary": "Build typed APIs end-to-end: path/query params, Pydantic bodies, dependency injection, security, testing, deployment."
+    },
+    {
+      "title": "Async IO in Python (Real Python)",
+      "url": "https://realpython.com/python-asyncio/",
+      "level": "intermediate",
+      "summary": "Concurrency model, asyncio event loop, async/await, tasks, and gather for I/O-bound workloads."
+    },
+    {
+      "title": "Testing with pytest (Real Python)",
+      "url": "https://realpython.com/pytest-python-testing/",
+      "level": "intermediate",
+      "summary": "Fixtures, parametrization, mocking, and coverage with pytest for maintainable test suites."
+    },
+    {
+      "title": "Pydantic Documentation",
+      "url": "https://docs.pydantic.dev/latest/",
+      "level": "intermediate",
+      "summary": "Models, validation, serialization, TypeAdapter, and the v1->v2 migration map."
+    },
+    {
+      "title": "Python Packaging User Guide - Packaging Projects",
+      "url": "https://packaging.python.org/en/latest/tutorials/packaging-projects/",
+      "level": "beginner",
+      "summary": "Recommended src/ layout, pyproject.toml, building and publishing a distribution (the basis for maintainable project structure)."
+    },
+    {
+      "title": "pytest Documentation",
+      "url": "https://docs.pytest.org/en/stable/",
+      "level": "intermediate",
+      "summary": "Reference for fixtures, markers, parametrization, and the native [tool.pytest] TOML config."
+    },
+    {
+      "title": "uv Documentation",
+      "url": "https://docs.astral.sh/uv/",
+      "level": "beginner",
+      "summary": "Single-binary Python project/package management: install interpreters, init, add, lock, run, and build."
+    }
+  ],
+  "methodologies": [
+    {
+      "name": "Test-Driven Development (TDD)",
+      "summary": "Write a failing test before the implementation, then make it pass and refactor; keeps behavior pinned and designs testable code.",
+      "steps": "1. Write a small failing test for the next behavior\n2. Run it to confirm it fails for the right reason\n3. Write the minimal code to make it pass\n4. Refactor while green\n5. Repeat; keep the suite in CI with a coverage gate"
+    },
+    {
+      "name": "Gradual / Type-Driven Development",
+      "summary": "Annotate code and let a type checker (mypy/pyright/ty) act as a compile-time safety net; especially effective with Pydantic and FastAPI.",
+      "steps": "1. Add type hints to new functions first\n2. Run the type checker in CI on every PR\n3. Enable strict mode incrementally\n4. Fix errors before merge; never blanket-ignore\n5. Use pydantic models as the data boundary"
+    },
+    {
+      "name": "12-Factor App for Python Services",
+      "summary": "Build stateless, config-outside-code services: env-based config, explicit deps, logs to stdout, one codebase per app.",
+      "steps": "1. One codebase, tracked in git\n2. Declare and pin dependencies (uv.lock)\n3. Store config in environment, not code\n4. Treat backing services (DB, cache) as attached resources\n5. Ship logs to stdout; run as stateless processes"
+    },
+    {
+      "name": "CI/CD with GitHub Actions",
+      "summary": "Automate lint + type-check + test + build on every push so regressions are caught before merge.",
+      "steps": "1. On push/PR: uv sync\n2. ruff check --fix && ruff format --check\n3. ty check (or mypy)\n4. uv run pytest with coverage threshold\n5. Build wheel/container on main; deploy from tag"
+    },
+    {
+      "name": "Reproducible Dependency Management",
+      "summary": "Lockfiles and isolated environments make builds deterministic across machines and CI.",
+      "steps": "1. Create an isolated env (uv venv / python -m venv)\n2. Add deps via uv add (writes uv.lock)\n3. Commit the lockfile\n4. Install in CI with uv sync --frozen\n5. Refresh deliberately (uv lock --upgrade) and re-test"
+    },
+    {
+      "name": "Dependency Injection / Clean Architecture",
+      "summary": "Pass dependencies (DB, config, clients) into functions/handlers instead of importing globals; improves testability and decoupling.",
+      "steps": "1. Define provider functions (get_db, get_settings)\n2. Inject via FastAPI Depends or constructor args\n3. Override providers in tests\n4. Keep business logic free of framework imports\n5. Separate domain, service, and transport layers"
+    }
+  ]
+}

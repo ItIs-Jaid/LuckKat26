@@ -1,0 +1,329 @@
+{
+  "domain": "c_cpp",
+  "sources": [
+    {
+      "kind": "blog",
+      "title": "Best C Compilers & Tools in 2025: GCC vs Clang vs MSVC",
+      "url": "https://coodeverse.com/reading-materials/c/c-q11-compile-tools",
+      "tier": 3
+    },
+    {
+      "kind": "blog",
+      "title": "CMake Best Practices for C++23 Projects (2025)",
+      "url": "https://markaicode.com/cmake-cpp23-best-practices-2025",
+      "tier": 3
+    },
+    {
+      "kind": "blog",
+      "title": "Mastering C++ Package Managers: vcpkg vs Conan",
+      "url": "https://thecodeforge.io/c-cpp/cpp-package-managers",
+      "tier": 3
+    },
+    {
+      "kind": "docs",
+      "title": "Boost C++ Libraries (official site)",
+      "url": "https://www.boost.org/",
+      "tier": 3
+    },
+    {
+      "kind": "docs",
+      "title": "C++ Core Guidelines (isocpp)",
+      "url": "https://isocpp.github.io/CppCoreGuidelines/",
+      "tier": 3
+    },
+    {
+      "kind": "github",
+      "title": "fmtlib/fmt — modern C++ formatting library (std::format reference impl)",
+      "url": "https://github.com/fmtlib/fmt",
+      "tier": 3
+    },
+    {
+      "kind": "github",
+      "title": "gabime/spdlog — fast C++ logging library",
+      "url": "https://github.com/gabime/spdlog",
+      "tier": 3
+    },
+    {
+      "kind": "github",
+      "title": "abseil/abseil-cpp — Google C++ Common Libraries",
+      "url": "https://github.com/abseil/abseil-cpp",
+      "tier": 3
+    },
+    {
+      "kind": "github",
+      "title": "microsoft/vcpkg — C++ library manager for Windows, Linux, macOS",
+      "url": "https://github.com/microsoft/vcpkg",
+      "tier": 3
+    },
+    {
+      "kind": "github",
+      "title": "conan-io/conan — C/C++ package manager",
+      "url": "https://github.com/conan-io/conan",
+      "tier": 3
+    },
+    {
+      "kind": "reddit",
+      "title": "r/cpp: Best practices for managing large C++ projects?",
+      "url": "https://www.reddit.com/r/cpp/comments/1fubvh2/best_practices_for_managing_large_c_projects",
+      "tier": 1
+    },
+    {
+      "kind": "reddit",
+      "title": "r/cpp: A comprehensive guide to modern CMake (real 80-file game engine)",
+      "url": "https://www.reddit.com/r/cpp/comments/1mjw02w/i_wrote_a_comprehensive_guide_to_modern_cmake",
+      "tier": 1
+    }
+  ],
+  "languages": [
+    {
+      "name": "C++",
+      "version": "23",
+      "role": "systems / native / performance-critical",
+      "notes": "C++23 is the current ISO standard; widely supported by GCC 15, Clang 19+, MSVC 2022 17.10+. Prefer target_compile_features(cxx_std_23) over global flags."
+    },
+    {
+      "name": "C",
+      "version": "17",
+      "role": "systems / native / embedded",
+      "notes": "C17 (ISO/IEC 9899:2018) is the baseline portable standard; use -std=c17 with -Wall -Wextra -Wpedantic. C23 adds nullptr, [[attributes]], and improved Unicode."
+    }
+  ],
+  "libraries": [
+    {
+      "language": "C++",
+      "name": "fmt",
+      "category": "formatting",
+      "purpose": "Fast, type-safe text formatting; the reference implementation behind C++20 std::format. Python-style fmt::format(\"{}\", x) syntax with compile-time format-string checking.",
+      "ecosystem": "vcpkg/conan/CMake FetchContent",
+      "version": "11"
+    },
+    {
+      "language": "C++",
+      "name": "spdlog",
+      "category": "logging",
+      "purpose": "Very fast header-only/compiled logging with asynchronous mode, multiple sinks, thread-safety, and pattern formatting built on {fmt}. Millions of messages/sec in benchmarks.",
+      "ecosystem": "vcpkg/conan",
+      "version": "1.17"
+    },
+    {
+      "language": "C++",
+      "name": "Boost",
+      "category": "meta-collection",
+      "purpose": "Large peer-reviewed library collection: Asio (portable networking/async I/O), Filesystem, Beast (HTTP/WebSocket), Spirit, Geometry, Graph, and more. The de-facto systems toolkit.",
+      "ecosystem": "vcpkg/conan/system",
+      "version": "1.88"
+    },
+    {
+      "language": "C++",
+      "name": "Abseil",
+      "category": "utilities",
+      "purpose": "Google's C++ Common Libraries: strings, flat_hash_map, synchronization (absl::Mutex), absl::Status, time, flags, logging. Augments the standard library; offers LTS snapshots (live-at-head otherwise).",
+      "ecosystem": "vcpkg/conan/bazel",
+      "version": "20250814.0"
+    },
+    {
+      "language": "C++",
+      "name": "CLI11",
+      "category": "cli-parsing",
+      "purpose": "Header-only command-line argument parser with subcommands, options, and validation. Lightweight alternative to Boost.Program_options.",
+      "ecosystem": "vcpkg/conan/header-only",
+      "version": "2.4"
+    },
+    {
+      "language": "C++",
+      "name": "nlohmann/json",
+      "category": "serialization",
+      "purpose": "Intuitive header-only JSON parser/serializer for modern C++ with STL-like syntax (json j = {\"a\", 1};). The most popular C++ JSON library.",
+      "ecosystem": "vcpkg/conan/header-only",
+      "version": "3.11"
+    },
+    {
+      "language": "C++",
+      "name": "GoogleTest",
+      "category": "testing",
+      "purpose": "Google's C++ test framework (gtest + gmock) with fixtures, parameterized tests, and death tests. Integrates with CTest for CI gating.",
+      "ecosystem": "vcpkg/conan",
+      "version": "1.15"
+    },
+    {
+      "language": "C++",
+      "name": "Catch2",
+      "category": "testing",
+      "purpose": "Modern, BDD-style C++ test framework with a single-header option, powerful assertions, and benchmark support. Alternative to GoogleTest.",
+      "ecosystem": "vcpkg/conan/header-only",
+      "version": "3.8"
+    },
+    {
+      "language": "C++",
+      "name": "ranges-v3",
+      "category": "algorithms",
+      "purpose": "Eric Niebler's range library that became the basis for C++20 std::ranges. Composable, lazy views (filter, transform, join) for expressive pipelines.",
+      "ecosystem": "vcpkg/conan/header-only",
+      "version": "0.12"
+    },
+    {
+      "language": "C++",
+      "name": "Protocol Buffers",
+      "category": "serialization",
+      "purpose": "Google's language-neutral, binary serialization for efficient cross-service/inter-process data exchange. Codegen for C++ message types.",
+      "ecosystem": "vcpkg/conan/system",
+      "version": "28"
+    },
+    {
+      "language": "C",
+      "name": "libcurl",
+      "category": "networking",
+      "purpose": "Portable C library for URL transfers over HTTP(S), FTP, and many protocols. The standard choice for network I/O in C/C++ systems code.",
+      "ecosystem": "vcpkg/conan/system",
+      "version": "8.9"
+    },
+    {
+      "language": "C++",
+      "name": "Eigen",
+      "category": "math/linear-algebra",
+      "purpose": "Header-only template library for linear algebra, matrices, and vectors with expression templates for zero-cost abstraction. Used in robotics/signal processing.",
+      "ecosystem": "vcpkg/conan/header-only",
+      "version": "3.4"
+    }
+  ],
+  "patterns": [
+    {
+      "title": "RAII (Resource Acquisition Is Initialization)",
+      "problem": "Manual resource release (delete, close, unlock) is skipped on early returns and exception paths, leaking memory/handles/locks.",
+      "solution": "Acquire the resource in a constructor and release it in the destructor so cleanup runs on every scope exit, including stack unwinding. Wrap OS handles in small owning classes.",
+      "anti_pattern": "Scattering raw new/delete, fopen/fclose, or lock/unlock through business logic and hoping every exit path cleans up.",
+      "snippet": "// Owning handle: destructor closes the file on any exit\nstruct File { explicit File(const char* p){ f_ = fopen(p,\"rb\"); if(!f_) throw errno; } ~File(){ if(f_) fclose(f_); } FILE* f_; };\nvoid use(){ File f(\"data.bin\"); /* auto-closed */ }"
+    },
+    {
+      "title": "Rule of Zero / Rule of Five",
+      "problem": "Hand-written copy/move/destructor logic is error-prone and easy to get wrong (double-free, leaks, broken invariants).",
+      "solution": "Prefer the Rule of Zero: hold resources in std::unique_ptr, std::vector, etc., and let the compiler generate copy/move/destructor. If you must manage a resource, implement all five (ctor, copy ctor, move ctor, copy=, move=, dtor) correctly.",
+      "anti_pattern": "Writing a custom destructor but forgetting the move operations, silently falling back to expensive/deep copies or causing double-frees.",
+      "snippet": "struct X { std::vector<int> v; std::unique_ptr<int> p; }; // Rule of Zero: no manual copy/move/dtor needed"
+    },
+    {
+      "title": "Pimpl (Pointer to Implementation / compilation firewall)",
+      "problem": "Private members and includes in a header force mass recompilation and unstable ABIs whenever implementation details change.",
+      "solution": "Store a std::unique_ptr<Impl> (forward-declared) in the header; define Impl only in the .cpp. Hides private data, cuts compile times, and stabilizes ABI. Define the destructor in the .cpp so Impl is complete when deleted.",
+      "anti_pattern": "Exposing private data members and heavy includes in the public header, coupling every consumer to implementation churn.",
+      "snippet": "// widget.h\nclass Widget { public: Widget(); ~Widget(); void f(); private: struct Impl; std::unique_ptr<Impl> p_; };\n// widget.cpp\nstruct Widget::Impl { int secret_; };\nWidget::Widget():p_(std::make_unique<Impl>()){}\nWidget::~Widget() = default;"
+    },
+    {
+      "title": "Explicit ownership with smart pointers",
+      "problem": "Raw pointers convey no ownership intent; shared_ptr used by default causes needless atomic ref-counting and unclear lifetimes.",
+      "solution": "Default to std::unique_ptr for sole ownership; pass non-owning access as T* or T&. Use std::shared_ptr only where ownership is genuinely shared. Prefer std::make_unique / std::make_shared.",
+      "anti_pattern": "Using std::shared_ptr for everything, or mixing raw new with smart pointers (use make_* instead).",
+      "snippet": "auto res = std::make_unique<Resource>();        // owner\nvoid observe(const Resource& r);                // borrow\nstd::shared_ptr<State> s = std::make_shared<State>(); // only if truly shared"
+    },
+    {
+      "title": "Modern target-based CMake",
+      "problem": "Legacy CMake uses global variables (CMAKE_CXX_FLAGS) that leak settings across unrelated targets and break portability.",
+      "solution": "Model the build as targets; attach properties with target_compile_options/ target_include_directories/ target_link_libraries using PUBLIC/PRIVATE/INTERFACE visibility. Set the standard via target_compile_features(cxx_std_23).",
+      "anti_pattern": "set(CMAKE_CXX_FLAGS \"${CMAKE_CXX_FLAGS} -Wall\") and set(CMAKE_CXX_STANDARD ...) globally.",
+      "snippet": "add_library(core src/core.cpp)\ntarget_compile_features(core PUBLIC cxx_std_23)\ntarget_compile_options(core PRIVATE -Wall -Wextra -Wpedantic)\ntarget_include_directories(core PUBLIC include)\ntarget_link_libraries(app PRIVATE core fmt::fmt)"
+    },
+    {
+      "title": "Reproducible dependency management (vcpkg / Conan)",
+      "problem": "'Works on my machine' breaks when teammates install libs to different paths or CI builds against a different version.",
+      "solution": "Declare dependencies in a manifest (vcpkg.json or conanfile.txt) and point CMake at the package manager's toolchain file. Enables binary caching and version-locked, reproducible builds.",
+      "anti_pattern": "Hand-building/vendoring libraries or relying on system package managers that ship outdated or mismatched versions.",
+      "snippet": "# vcpkg.json\n{ \"name\": \"myapp\", \"version\": \"1.0.0\", \"dependencies\": [ \"fmt\", \"spdlog\" ] }\n# configure: cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE=.../vcpkg.cmake"
+    },
+    {
+      "title": "FetchContent for well-behaved CMake dependencies",
+      "problem": "git submodules and add_subdirectory of vendored copies drift out of sync and complicate updates.",
+      "solution": "For libraries with proper CMake support, use FetchContent_Declare + FetchContent_MakeAvailable to fetch, build, and link a pinned tag in one place; link the exported target (e.g. fmt::fmt).",
+      "anti_pattern": "Manually cloning dependencies into a third_party/ tree and wiring them with include_directories + raw add_subdirectory.",
+      "snippet": "include(FetchContent)\nFetchContent_Declare(fmt GIT_REPOSITORY https://github.com/fmtlib/fmt GIT_TAG 11.0.2)\nFetchContent_MakeAvailable(fmt)\ntarget_link_libraries(app PRIVATE fmt::fmt)"
+    },
+    {
+      "title": "Task-based parallelism over raw threads",
+      "problem": "Raw std::thread with manual join() management leaks threads on exceptions and makes cancellation and error propagation painful.",
+      "solution": "Prefer task-based approaches: std::async with futures for one-off tasks, or a thread pool / executor (e.g. via Boost.Asio io_context, or the emerging P2300 sender/receiver model) for structured concurrency. Always join on every path.",
+      "anti_pattern": "Detaching threads (std::thread::detach) and hoping they finish, or forgetting to join in the presence of exceptions.",
+      "snippet": "auto fut = std::async(std::launch::async, []{ return compute(); });\nint r = fut.get(); // joins + propagates exceptions\n// structured alternative: asio::io_context ctx; post(ctx, work); ctx.run();"
+    }
+  ],
+  "tutorials": [
+    {
+      "title": "CMake Best Practices for C++23 Projects (2025)",
+      "url": "https://markaicode.com/cmake-cpp23-best-practices-2025",
+      "level": "advanced",
+      "summary": "Concrete modern-CMake techniques: target properties over globals, correct PUBLIC/PRIVATE/INTERFACE usage, FetchContent for dependencies, and speeding up C++23 builds."
+    },
+    {
+      "title": "CMake Build System Complete Guide for C++ Projects",
+      "url": "https://thecodeforge.io/c-cpp/cmake-build-system",
+      "level": "intermediate",
+      "summary": "End-to-end CMake from basics to production: out-of-source builds, target model, find_package vs FetchContent, and debugging build issues. Used by LLVM, Qt, Boost."
+    },
+    {
+      "title": "Modern C++ Programming — C++ Ecosystem (CMake, Docs, Tools)",
+      "url": "https://federico-busato.github.io/Modern-CPP-Programming/18.Ecosystem.pdf",
+      "level": "advanced",
+      "summary": "Free reference covering the modern C++ toolchain: CMake, documentation, idioms (RAII, Pimpl, Rule of Zero), and ecosystem tools."
+    },
+    {
+      "title": "std::unique_ptr: Complete C++ Guide to Exclusive Ownership",
+      "url": "https://pkglog.com/en/blog/cpp-unique-ptr-guide",
+      "level": "intermediate",
+      "summary": "Practical RAII and unique_ptr: construction, deleters, arrays, factories, Pimpl, polymorphic bases, containers, and exception safety."
+    },
+    {
+      "title": "A comprehensive guide to modern CMake (real 80-file engine)",
+      "url": "https://www.reddit.com/r/cpp/comments/1mjw02w/i_wrote_a_comprehensive_guide_to_modern_cmake",
+      "level": "advanced",
+      "summary": "Community write-up of target-based CMake on a real cross-platform game engine: dependency strategies, precompiled headers, CTest, PUBLIC/PRIVATE scoping."
+    },
+    {
+      "title": "C++ Core Guidelines",
+      "url": "https://isocpp.github.io/CppCoreGuidelines/",
+      "level": "advanced",
+      "summary": "Authoritative, continuously updated guidelines by Stroustrup & Sutter covering interfaces, resource management, concurrency, and error handling."
+    },
+    {
+      "title": "Abseil — C++ Common Libraries (docs & quickstart)",
+      "url": "https://abseil.io/",
+      "level": "intermediate",
+      "summary": "Official Abseil documentation: codemap of components (strings, containers, synchronization, status, time), build instructions, and LTS policy."
+    },
+    {
+      "title": "Learn C++ (learncpp.com)",
+      "url": "https://www.learncpp.com/",
+      "level": "beginner",
+      "summary": "Free, widely recommended tutorial series from basics through modern C++ (RAII, OOP, templates, smart pointers) with runnable examples."
+    }
+  ],
+  "methodologies": [
+    {
+      "name": "Modern target-based CMake build",
+      "summary": "Build C++ with targets and usage requirements instead of legacy global variables, so settings propagate transitively and stay portable.",
+      "steps": "cmake_minimum_required(VERSION 3.16)\nproject(myapp LANGUAGES CXX)\nadd_library(core src/core.cpp)\ntarget_compile_features(core PUBLIC cxx_std_23)\ntarget_compile_options(core PRIVATE -Wall -Wextra)\ntarget_link_libraries(app PRIVATE core fmt::fmt)\nBuild out-of-source: cmake -B build && cmake --build build"
+    },
+    {
+      "name": "Reproducible dependency management",
+      "summary": "Pin dependencies in a manifest and let a package manager (vcpkg/conan) provide version-locked, binary-cached builds across dev and CI.",
+      "steps": "Add a vcpkg.json / conanfile.txt declaring dependencies and versions\nPoint CMake at the toolchain file: -DCMAKE_TOOLCHAIN_FILE=.../vcpkg.cmake\nEnable binary caching (VCPKG_BINARY_SOURCES / conan cache) for CI speed\nDocument the CI triplet (OS/architecture) to avoid profile drift\nRun `vcpkg install` / `conan install` before configure"
+    },
+    {
+      "name": "Large-project modularization",
+      "summary": "Split a ballooning codebase into smaller static libraries (one per domain) so boundaries and the dependency DAG become explicit, reducing recompilation.",
+      "steps": "Identify domain boundaries (e.g. network, storage, ui) as separate targets\nEach module ~40-100 files, built as its own static library\nDeclare target dependencies explicitly (no project-root include path)\nKeep folders that could stand alone as standalone libraries\nEnforce clang-format in CI before merge"
+    },
+    {
+      "name": "Test-driven C++ with CTest/GoogleTest",
+      "summary": "Gate changes with a fast unit-test suite integrated into CMake/CTest so regressions are caught in CI rather than production.",
+      "steps": "enable_testing() in the top-level CMakeLists\nAdd GoogleTest via FetchContent and link gtest_main\nwrite tests/*.cpp with EXPECT/ASSERT assertions\nRegister with gtest_discover_tests(app)\nRun in CI: cmake --build build && ctest --test-dir build --output-on-failure"
+    },
+    {
+      "name": "Sanitizer-first debugging",
+      "summary": "Compile debug builds with AddressSanitizer/UBSan to catch memory and undefined-behavior bugs automatically instead of chasing heisenbugs.",
+      "steps": "Debug build: -fsanitize=address,undefined -g -O1 -fno-omit-frame-pointer\nRun the binary; sanitizers abort on the first violation with a stack trace\nUse -fsanitize=memory (MSan) for uninitialized reads (requires instrumented build)\nKeep sanitizer builds in CI alongside the optimized release build"
+    },
+    {
+      "name": "Diagnostics-first toolchain selection",
+      "summary": "Choose compilers deliberately: Clang for superior diagnostics and static analysis during development, GCC/MSVC for production where each shines.",
+      "steps": "Use Clang in dev for clearer errors and clang-tidy / scan-build\nGate builds on -Wall -Wextra -Wpedantic (and -Werror in CI if desired)\nBuild release with GCC or MSVC per target platform (Linux/Windows)\nPin the standard via target_compile_features, not global -std flags\nCross-compile/verify on the actual deployment target"
+    }
+  ]
+}
