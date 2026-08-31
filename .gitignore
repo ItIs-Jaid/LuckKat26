@@ -7,3 +7,37 @@ kb/export/
 __pycache__/
 *.pyc
 .env
+
+# Agent/local state — never published
+.hermes/
+.worktrees/
+
+# Foreign "localhostops" project: OUT OF SCOPE and MUST NEVER be published.
+# A bare `git add -A` would leak this tree (docs/pipeline.md carries PII "<operator>").
+# Excluded per repo governance. The dashboard/ app targets kb/kb.db only and IS
+# committable; this foreign tree is not.
+api/
+pipeline/
+data/
+analysis/
+display/
+k8s/
+docker-compose.yml
+docker-compose.display.yml
+docker-compose.stack.yml
+requirements*.txt
+docs/pipeline.md
+.env.example
+
+# Dashboard dev artifacts — the dashboard/ app itself IS committable;
+# only its local DBs / venv / caches are excluded from the public repo.
+dashboard/.venv/
+dashboard/*.db
+.pytest_cache/
+*.db
+*.db-wal
+*.db-shm
+
+# Portfolio export scrub additions (local-first: never publish live DB, ingest state, or secrets)
+data/.filesource_state.json
+.env*

@@ -53,3 +53,4 @@ Notes:
 | Date | Change |
 |---|---|
 | 2026-08-29 | Initial capture: PyCharm 2026.2, CLion 2026.2.1, DataGrip 2026.2.4 |
+| 2026-08-30 | Added file-source pipeline + security gate: data/device_inventory.json (local/nas-pc/pixel9), pipeline/security.py (FileIngestGuard: path/size/schema allow-list + NoEgress), pipeline/adapters/file_source.py (universal FileSourceAdapter), tools/ingest/run_ingest.py. All three roots (local/NAS/mobile) share one code path. Sim stand-in roots used until NAS/Pixel mounts are live; flip config_json.root->intended_root to go real. Verified: 10/10 security gate tests, end-to-end ingest for all three sources. |

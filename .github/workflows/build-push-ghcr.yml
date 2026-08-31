@@ -1,0 +1,40 @@
+name: build-push-ghcr
+on:
+  push:
+    branches: [main, "tools-indevolopmetn"]
+  workflow_dispatch:
+
+permissions:
+  packages: write   # required to push to ghcr.io
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - image: localhostops-display
+            dockerfile: display/Dockerfile
+          - image: localhostops-api
+            dockerfile: api/Dockerfile
+          - image: localhostops-pipeline
+            dockerfile: pipeline/Dockerfile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}:latest
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.description=localhostops ${{ matrix.image }}
